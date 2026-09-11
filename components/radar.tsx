@@ -242,8 +242,8 @@ export default function RadarApp() {
     [editApp, setEditApp] = useState<Application | null>(null),
     [mobile, setMobile] = useState(false);
   const profileClicks = useRef({ count: 0, last: 0 });
-  function openProfile() {
-    const now = Date.now();
+  function openProfile(event: React.MouseEvent<HTMLButtonElement>) {
+    const now = event.timeStamp;
     profileClicks.current.count = now - profileClicks.current.last > 10000 ? 1 : profileClicks.current.count + 1;
     profileClicks.current.last = now;
     if (profileClicks.current.count === 5) {
