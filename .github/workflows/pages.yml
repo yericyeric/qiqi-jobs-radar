@@ -1,8 +1,12 @@
-name: Publish fictional demo to GitHub Pages
+name: Publish Qiqi live jobs
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "7,22,37,52 * * * *"
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -11,6 +15,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,10 +23,6 @@ jobs:
           node-version: "22"
       - uses: pnpm/action-setup@v4
       - run: pnpm install --frozen-lockfile
-      - run: pnpm db:generate
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
       - name: Configure project path
         shell: bash
         run: |
@@ -31,7 +32,34 @@ jobs:
           else
             echo "NEXT_PUBLIC_BASE_PATH=/$REPO_NAME" >> "$GITHUB_ENV"
           fi
-      - run: pnpm build:pages
+      - name: Reuse website build
+        id: website
+        uses: actions/cache@v4
+        with:
+          path: out
+          key: qiqi-live-v1-${{ github.repository_id }}-${{ github.sha }}
+      - name: Check and build website when code changes
+        if: steps.website.outputs.cache-hit != 'true'
+        run: |
+          pnpm db:generate
+          pnpm lint
+          pnpm typecheck
+          pnpm test
+          pnpm build:live
+      - name: Restore previous job facts
+        run: node scripts/feed-storage.mjs read
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Search official employer feeds
+        run: pnpm collect:jobs
+      - name: Preserve job facts across runs
+        run: node scripts/feed-storage.mjs write
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Update website data
+        run: |
+          mkdir -p out/data
+          cp public/data/jobs.json out/data/jobs.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -43,6 +71,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy demo
+      - name: Publish live radar
         id: deployment
         uses: actions/deploy-pages@v4
