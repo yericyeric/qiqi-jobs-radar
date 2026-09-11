@@ -10,6 +10,7 @@ import configs from "./sources.json";
 import { careerRelated } from "../lib/career";
 import { scoreJob } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
+import { directJobPortal } from "../lib/markets";
 import { broadSearch, deduplicateFeed } from "./broad-search";
 
 type Board = (typeof configs)[number];
@@ -411,6 +412,14 @@ export async function collect(
     dateValue,
     categoryFor,
     get,
+    getPage: async (url) => {
+      if (!directJobPortal(url)) throw new Error("Not a vacancy URL");
+      const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(12000), headers: { Accept: "text/html", "User-Agent": "QiqiJobRadar/1.0 (public job listings)" } });
+      if (!response.ok) throw new Error("Page unavailable");
+      const html = await response.text();
+      if (html.length > 3000000) throw new Error("Page too large");
+      return html;
+    },
   });
   const feed = feedSchema.parse({
     version: 1,

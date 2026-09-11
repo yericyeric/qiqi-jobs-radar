@@ -13,6 +13,8 @@ import {
 } from "../scripts/broad-search";
 import { plain, countyFor, dateValue } from "../scripts/collect-jobs";
 import { feedSchema } from "../lib/live";
+import { directJobPortal } from "../lib/markets";
+import { jobPostingFromHtml } from "../scripts/broad-search";
 const now = Date.parse("2026-09-11T12:00:00Z");
 const description =
   "Support live event production and stage management. Coordinate crew scheduling, event logistics, backstage operations and video production.";
@@ -25,6 +27,35 @@ const makeFeed = () =>
     jobs: [],
   });
 describe("broad discovery and 15-point career gate", () => {
+  it("rejects search pages and accepts individual vacancy URLs", () => {
+    expect(directJobPortal("https://www.indeed.com/q-events-l-miami-jobs.html")).toBeNull();
+    expect(directJobPortal("https://www.glassdoor.com/Job/miami-jobs.htm")).toBeNull();
+    expect(directJobPortal("https://www.linkedin.com/jobs/search/?keywords=events")).toBeNull();
+    expect(directJobPortal("https://www.ziprecruiter.com/Jobs/Events/-in-Miami,FL")).toBeNull();
+    expect(directJobPortal("https://www.indeed.com/viewjob?jk=abc123")).toBe("Indeed");
+    expect(directJobPortal("https://www.linkedin.com/jobs/view/event-coordinator-12345")).toBe("LinkedIn");
+    expect(directJobPortal("https://linkedin.com.attacker.test/jobs/view/12345")).toBeNull();
+    expect(jobPostingFromHtml('<script type="application/ld+json">{"@type":"ItemList"}</script>')).toBeNull();
+  });
+  it("promotes readable local JobPosting pages into scored jobs, retaining blocked direct links separately", async () => {
+    const get = async (url: string): Promise<unknown> => {
+      if (!url.includes("serpapi.com")) return { jobs: [] };
+      if (url.includes("engine=google_jobs")) return { jobs_results: [] };
+      const city = url.includes("Charleston") ? "Charleston" : "Miami";
+      return { organic_results: [{ title: `Production Assistant ${city}`, snippet: description, link: `https://www.linkedin.com/jobs/view/${city}-12345` }, { title: `Production Assistant ${city}`, snippet: description, link: "https://www.indeed.com/q-production-jobs.html" }] };
+    };
+    const getPage = async (url: string) => {
+      if (url.includes("Charleston")) throw new Error("Access denied");
+      return `<script type="application/ld+json">${JSON.stringify({ "@graph": [{ "@type": "JobPosting", title: "Production Assistant", description, hiringOrganization: { name: "Fixture Venue" }, datePosted: "2026-09-11T10:00:00Z", jobLocation: { address: { addressLocality: "Miami", addressRegion: "FL", addressCountry: "US" } } }] })}</script>`;
+    };
+    const result = await broadSearch(null, now, { plain, countyFor, dateValue, categoryFor: () => "Production", get, getPage }, { SERPAPI_API_KEY: "fixture-key" });
+    expect(result.jobs).toHaveLength(1);
+    expect(result.jobs[0].input.organization.county).toBe("Miami-Dade");
+    expect(result.jobs[0].input.sources[0].name).toBe("LinkedIn");
+    expect(result.jobs[0].input.sources[0].originalPostedAt).toBe("2026-09-11T10:00:00.000Z");
+    expect(result.leads).toHaveLength(1);
+    expect(result.leads[0].market).toBe("charleston");
+  });
   it("keeps a career-related long shot between 15 and 29 without admitting unrelated video roles", () => {
     const job = makeSample(now).jobs[0];
     job.title = "Senior Studio Assistant";
@@ -147,9 +178,9 @@ describe("broad discovery and 15-point career gate", () => {
       return {
         organic_results: [
           {
-            title: "Event Coordinator jobs",
+            title: `Event Coordinator ${url.includes("Charleston") ? "Charleston" : "Miami"}`,
             snippet: description,
-            link: "https://example.com/careers",
+            link: `https://www.linkedin.com/jobs/view/${url.includes("Charleston") ? "charleston" : "miami"}-12345`,
           },
         ],
       };
