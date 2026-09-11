@@ -237,7 +237,7 @@ export async function broadSearch(
   previous: LiveFeed | null,
   now: number,
   helpers: Helpers,
-  env: NodeJS.ProcessEnv = process.env,
+  env: Record<string, string | undefined> = process.env,
 ) {
   const jobs: FeedRecord[] = [],
     sources: Status[] = [];
