@@ -222,7 +222,7 @@ function makeRecord(
   });
   if (
     !parsed.success ||
-    scoreJob(parsed.data, sampleProfile, now).total < 30 ||
+    scoreJob(parsed.data, sampleProfile, now).total < 15 ||
     scoreJob(parsed.data, sampleProfile, now).rejection
   )
     return null;
@@ -491,9 +491,12 @@ export async function broadSearch(
     },
   );
   const terms = [
-    "event coordinator stagehand live entertainment",
-    "production assistant production coordinator venue",
-    "video editor broadcast content producer",
+    "event coordinator",
+    "production assistant",
+    "video editor",
+    "stagehand",
+    "production coordinator",
+    "content producer",
   ];
   const cities = [
     { id: "miami", name: "Miami, Florida" },
@@ -501,7 +504,7 @@ export async function broadSearch(
   ] as const;
   for (const city of cities) {
     const source = {
-      id: `google-jobs:${city.id}`,
+      id: `google-jobs-v2:${city.id}`,
       name: `Google Jobs · ${city.name} (SerpApi)`,
       url:
         "https://www.google.com/search?ibp=htl;jobs&q=" +
@@ -511,8 +514,8 @@ export async function broadSearch(
       source.id,
       source.name,
       source.url,
-      8,
-      "Broad job search across employers and job boards. One rotating query every eight hours per city; 210 shared requests per 31 days maximum.",
+      12,
+      "Broad job search across employers and job boards. One rotating query every twelve hours per city; 210 shared requests per 31 days maximum.",
       async () => {
         const q = `${terms[Math.floor(state.queryIndex / 2) % terms.length]} jobs in ${city.name}`;
         state.queryIndex++;
@@ -528,8 +531,8 @@ export async function broadSearch(
           await helpers.get(`https://serpapi.com/search.json?${params}`),
         );
         if (
-          data.error ||
-          (!Array.isArray(data.jobs_results) && !data.search_information)
+          (data.error && !/hasn.t returned any results|no results/i.test(str(data.error))) ||
+          (!data.error && !Array.isArray(data.jobs_results) && !data.search_information)
         )
           throw new Error("Search unavailable");
         const rows = arr(data.jobs_results);
@@ -564,15 +567,16 @@ export async function broadSearch(
       true,
     );
   }
+  for (const city of cities) {
   await run(
-    "google-web",
-    "Google web discovery (SerpApi)",
+    `google-web-v2:${city.id}`,
+    `Job boards · ${city.name} (Google search)`,
     "https://www.google.com",
-    48,
-    "General web search every two days. Promising pages are leads, not verified job offers.",
+    24,
+    "Daily indexed search of Indeed, LinkedIn, Glassdoor, ZipRecruiter, Monster, SimplyHired, EntertainmentCareers, ProductionHUB, Staff Me Up and TeamWork Online. Results require review; this is not direct access to those platforms.",
     async () => {
-      const city = cities[Math.floor(now / (48 * HOUR)) % 2];
-      const query = `("event coordinator" OR "production assistant" OR "video editor") jobs ${city.name}`;
+      const portals = "(site:indeed.com OR site:linkedin.com/jobs OR site:glassdoor.com OR site:ziprecruiter.com OR site:monster.com OR site:simplyhired.com OR site:entertainmentcareers.net OR site:productionhub.com OR site:staffmeup.com OR site:teamworkonline.com)";
+      const query = `("event coordinator" OR "production assistant" OR "video editor" OR stagehand OR "content producer") jobs "${city.name.split(",")[0]}" ${portals}`;
       const params = new URLSearchParams({
         engine: "google",
         q: query,
@@ -607,12 +611,13 @@ export async function broadSearch(
               foundAt: new Date(now).toISOString(),
               market: city.id,
             })),
-          ].map((l) => [canonicalUrl(l.url), l]),
+          ].map((l) => [l.market + ":" + canonicalUrl(l.url), l]),
         ).values(),
-      ].slice(-40);
+      ].slice(-80);
       return { records: [], examined: data.organic_results.length };
     },
     true,
   );
+  }
   return { jobs, sources, searchState: state, leads };
 }
