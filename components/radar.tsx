@@ -75,6 +75,7 @@ import {
 import {
   inMarket,
   directJobPortal,
+  localVacancyText,
   compareRecentFit,
   marketLabels,
   type Market,
@@ -1113,7 +1114,7 @@ export default function RadarApp() {
                         <h2>Local vacancy links to review</h2>
                         <p className="muted">Individual vacancy links for {marketLabels[market]}. Only direct job pages are included. Pages we could not read remain here for manual review; fully parsed listings enter the main radar. Confirm the posting date and on-site schedule.</p>
                         <div className="org-grid">
-                          {feed.leads.filter((l) => l.market === market && !!directJobPortal(l.url) && !/\bremote\b|work from home/i.test(l.title + " " + l.snippet) && careerRelated({ title: l.title, description: l.snippet }, state.profile)).map((l) => (
+                          {feed.leads.filter((l) => l.market === market && !!directJobPortal(l.url) && localVacancyText(l.title, l.snippet, market) && careerRelated({ title: l.title, description: l.snippet }, state.profile)).map((l) => (
                             <article className="panel" style={{ padding: 22 }} key={l.url}>
                               <span className="eyebrow">{new URL(l.url).hostname.replace(/^www\./, "")} · Review needed</span>
                               <h3><External href={l.url}>{l.title}</External></h3>
