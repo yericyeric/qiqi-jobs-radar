@@ -93,6 +93,7 @@ export function verify(v: Verification | null, now = Date.now()): Status {
     return "ACTIVE";
   return v.applyExists ? "LIKELY_ACTIVE" : "UNKNOWN";
 }
+import { careerRelated } from "./career";
 const signals = [
   {
     pattern:
@@ -140,7 +141,9 @@ export function scoreJob(
   const desc = j.description,
     title = j.title,
     text = title + " " + desc;
-  let rejection: string | null = null;
+  let rejection: string | null = careerRelated(j, profile)
+    ? null
+    : "CAREER_UNRELATED";
   const meaningful = signals.filter((x) => x.pattern.test(desc));
   if (
     /manufactur|food factory|warehouse production|industrial production|pharmaceutical|assembly line/i.test(
@@ -184,7 +187,7 @@ export function scoreJob(
   const components: Record<string, number> = {
     "Career relevance": meaningful.length
       ? Math.min(35, 15 + meaningful.length * 7)
-      : signals.some((x) => x.pattern.test(title))
+      : careerRelated(j, profile)
         ? 10
         : 0,
     "Responsibility overlap": Math.min(25, overlap.length * 7),
@@ -242,7 +245,7 @@ export function scoreJob(
   );
   if (!meaningful.length) total = Math.min(total, 45);
   if (rejection) total = Math.min(total, 15);
-  if (!rejection && total < 60) rejection = "LOW_FIT";
+  if (!rejection && total < 30) rejection = "LOW_FIT";
   return {
     total,
     label:
@@ -252,8 +255,8 @@ export function scoreJob(
           ? "Strong Match"
           : total >= 70
             ? "Good Match"
-            : total >= 60
-              ? "Possible"
+            : total >= 30
+              ? "Possible fit"
               : "Low fit",
     components,
     reasons: overlap.map((x) => x.label),

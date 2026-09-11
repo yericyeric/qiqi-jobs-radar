@@ -1,35 +1,27 @@
-# Real jobs on GitHub Pages
+# Broad job discovery on GitHub Pages
 
-The live workflow must be uploaded and complete successfully before the public site changes. Local validation is not proof of deployment. See LEEME.md for activation.
+## Current scope
 
-## How it works
+The default is 30/100 possible fit, with a mandatory career-relevance gate. Generic coordination alone cannot qualify an unrelated job. The gate runs in both collection and the browser; existing cached data is rescored. Explicit manufacturing/software/insurance roles and disguised commission-only sales are rejected. Unknown requirements remain unresolved. The recent filter remains 48 hours with the past 24 hours first.
 
-GitHub Actions checks seven configured employer boards every 15 minutes, at minutes 7, 22, 37 and 52 UTC. Runs may be delayed or dropped. The collector publishes validated job facts in `public/data/jobs.json`, retaining the previous snapshot in the `radar-data` branch with the automatic workflow token. No paid server, database, ATS account or manually created API key is required.
+Sources include Remotive (six-hour cadence, its public data has a 24-hour delay), Jobicy (six hours, up to 200 listings), Himalayas (daily, up to 1,000 recent listings), plus the existing Greenhouse/Lever/SmartRecruiters employer watchlist. Public portal listings are filtered for explicit US/worldwide remote eligibility and career relevance. They are not a complete index of every job. The local Google Jobs search is activated by the GitHub secret SERPAPI_API_KEY.
 
-Pages serves the app and JSON. The open app downloads the latest snapshot every minute; this does not initiate another employer search. Profile edits, notes, saves and applications stay in this browser. Existing real imports and profile edits migrate from the demo store; fictional jobs and their actions remain only in the old demo store. Export backups before clearing browser data. Devices do not synchronize.
+Google Jobs runs one rotating query every eight hours for each city, using the job description for the same scoring pipeline. General Google web discovery runs every 48 hours, alternating cities; relevant snippets become clearly separated unverified leads. No arbitrary external job page is fetched and no general search snippet is presented as a confirmed vacancy. Search results can include listings from other boards; no direct scraping of LinkedIn or Indeed is implemented.
 
-The compiled frontend is cached by source commit. Scheduled runs reuse it. `main` contains source code; `radar-data` holds public feed history. Do not merge the data branch into main. Standard GitHub-hosted runners are free in public repositories. GitHub can disable schedules after 60 days without repository activity; check Actions and re-enable the workflow if necessary.
+## Budget and scheduling
 
-## Coverage and evidence
+The GitHub workflow runs every 15 minutes; individual sources respect their own intervals. Persisted nextCheckAt timestamps prevent repeated queries, including on most failures. Source errors retain previous records and are displayed. The SerpApi integration shares a maximum of 210 attempted requests in a persisted 31-day window; it pauses at that limit. This is below the documented Free plan's 250 monthly searches. Quotas also depend on other uses of the same key and the provider's billing cycle; use a Free account, without paid renewal. This code never purchases credits. A killed process before persistence may lose its last request count; the provider's free-plan limit remains authoritative.
 
-Configured employers: Fever, Comfrt, CAMP, Guardz, Feld Entertainment, NBCUniversal and Auberge Collection, including The Dunlin in Johns Island near Charleston. Add verified boards in `scripts/sources.json`. This is a limited employer watchlist, not all internet jobs, LinkedIn or Indeed. Remote-only jobs are not collected in this release; imported remote records still work.
+The public feed and schedule state live on radar-data; only static code is on main. The workflow token writes public job facts, never browser notes/profile/history. Keys are supplied only to the collector and are never included in source URLs, logs or the public bundle. GitHub's raw-content response is used when a feed is too large for base64 contents responses. Standard public runners avoid a paid server. GitHub may delay, drop or disable scheduled runs; the UI reports scan and per-source times.
 
-The collector filters local locations and role titles, then the browser scorer evaluates responsibilities against Qiqi's profile. Charleston requires SC/South Carolina evidence and excludes WV. The default radar shows postings within 48 hours and fit 70+, prioritizing the past 24 hours. Broaden filters for older postings. No result means no available record passes the filters, not that the city has no jobs. Employer qualifications remain UNKNOWN and need review before applying.
+## Provenance and retention
 
-Greenhouse uses `first_published`, never `updated_at`. SmartRecruiters uses `releasedDate`. Lever does not consistently supply a documented publication date, so it stays unknown and cannot pass the recent filter. Each stable posting ID retains its earliest observed publication date across runs. A changed employer job ID can evade repost detection and needs review.
+Greenhouse uses first_published, SmartRecruiters releasedDate, and Lever dates remain unknown when absent. Board publication dates are attributed to the board. Remotive's timezone-less publication strings are interpreted as UTC and that assumption is recorded. Relative Google dates are estimates, using the older end of the rounded interval. Discovery time never becomes an original publication date. Stable IDs retain earlier dates across runs. Canonical duplicates share source attribution; employer-created new IDs can evade repost detection.
 
-ATS records are LIKELY_ACTIVE: the public API returned a posting and application link, but the external application form was not tested or submitted. No restricted-page scraping, login bypass or automatic applications occur. Missing employment types are Unknown. Salary/contact/affiliation facts are not fabricated.
+ATS and board records are LIKELY_ACTIVE based on returned records and links, never proof the employer's external application form works. Checks expire to UNKNOWN after 24 hours. A missing result in a partial or rotating broad search never marks a job closed. Broad records age out after 30 days without being seen. Complete successful ATS scans can mark absent jobs closed; changes outside filters alone do not prove closure. Local trackers retain removed records. Source attribution and backlinks are shown on cards and details.
 
-Complete pagination is required for source success. Source failures preserve previous jobs and verification times. Records absent from a complete successful source scan are marked closed and retained publicly for 30 days; local trackers keep them afterward. Verification older than 24 hours becomes UNKNOWN. The banner warns after 45 minutes without a scan, with separate per-source errors. Repeated failures need review in Actions.
+## Verification and deployment
 
-## Commands and remaining scope
+Run pnpm collect:jobs, pnpm lint, pnpm typecheck, pnpm test and pnpm build:live. build:pages remains an optional fictional demo; build remains the database edition. Google adapters are tested with mocked provider responses until the user supplies a real key through GitHub. Local success does not activate the workflow remotely; see LEEME.md for upload and activation steps.
 
-`pnpm collect:jobs` refreshes the public snapshot. `pnpm build:live` exports the live app. `pnpm build:pages` retains the fictional demo. `pnpm build` builds the separate database edition, which still uses manual imports. Email/SMS, automatic applications and general web discovery are not implemented.
-
-## References
-
-- [GitHub runner billing](https://docs.github.com/en/actions/concepts/billing-and-usage)
-- [GitHub schedule behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
-- [Greenhouse API](https://docs.greenhouse.io/job-board.html)
-- [Lever API](https://github.com/lever/postings-api)
-- [SmartRecruiters endpoints](https://developers.smartrecruiters.com/docs/endpoints)
+References: [SerpApi Google Jobs](https://serpapi.com/google-jobs-api), [SerpApi free quota](https://serpapi.com/pricing), [Remotive API](https://github.com/remotive-com/remote-jobs-api), [Jobicy API](https://jobicy.com/jobs-rss-feed), [Himalayas API](https://himalayas.app/api), [GitHub schedule](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).

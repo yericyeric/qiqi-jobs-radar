@@ -2,11 +2,11 @@
 
 ## Live GitHub Pages release — September 2026
 
-The Pages workflow now checks seven public employer boards through Greenhouse, Lever and SmartRecruiters every 15 minutes. It publishes real job facts while keeping private notes and actions in browser storage. GitHub may delay scheduled runs. Read **LIVE-DATA.md** for the current design and **LEEME.md** to activate it. No paid server or ATS key is required. The historical Phase 1 details below describe the database edition and optional fictional demo.
+The Pages workflow combines multi-employer job boards, optional Google Jobs/web discovery through SerpApi, and direct employer feeds. The collector runs every 15 minutes with independent per-source intervals. The default fit threshold is 30/100 with mandatory career relevance. It publishes real job facts while keeping private notes and actions in browser storage. GitHub may delay scheduled runs. Read **LIVE-DATA.md** for the current design and **LEEME.md** to activate it. No paid server is required; Google searches need a free SerpApi key. The historical Phase 1 details below describe the database edition and optional fictional demo.
 
 ## Miami ↔ Charleston
 
-The location switch selects **Miami / South Florida** or **Charleston, South Carolina** for the radar, saved feed and organization directory. Each switch resets the feed to the past 48 hours, 70+ fit and freshness-first ranking: the past 24 hours first, then 24–48 hours, with better fit first within each group. Broader date/fit filters remain available for deliberate review. Matching remote roles may appear in either market. Applications remain together so location changes never hide application history.
+The location switch selects **Miami / South Florida** or **Charleston, South Carolina** for the radar, saved feed and organization directory. Each switch resets the feed to the past 48 hours, 30+ possible fit and freshness-first ranking: the past 24 hours first, then 24–48 hours, with better fit first within each group. Broader date/fit filters remain available for deliberate review. Matching remote roles may appear in either market. Applications remain together so location changes never hide application history.
 
 Charleston imports use `organization.county: "Charleston"` and a location such as `Charleston, SC`. Existing profiles gain Charleston once without changing resume facts or deleting records. The profile screen can disable it afterward. Existing demo workspaces receive two clearly fictional Charleston examples without rewriting old posting dates. No automated search is enabled by this location update.
 

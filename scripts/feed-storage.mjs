@@ -26,13 +26,25 @@ const file = "/contents/public/data/jobs.json";
 if (process.argv[2] === "read") {
   const stored = await api(`${file}?ref=${branch}`);
   if (stored) {
-    if (stored.encoding !== "base64" || !stored.content)
-      throw new Error("Feed storage is incomplete");
+    let content;
+    if (stored.encoding === "base64" && stored.content)
+      content = Buffer.from(stored.content, "base64");
+    else {
+      // GitHub omits base64 content for files above 1 MB; use the raw media type.
+      const response = await fetch(`${base}${file}?ref=${branch}`, {
+        signal: AbortSignal.timeout(30000),
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/vnd.github.raw+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      });
+      if (!response.ok)
+        throw new Error(`GitHub raw feed returned HTTP ${response.status}`);
+      content = Buffer.from(await response.arrayBuffer());
+    }
     await mkdir("public/data", { recursive: true });
-    await writeFile(
-      "public/data/jobs.json",
-      Buffer.from(stored.content, "base64"),
-    );
+    await writeFile("public/data/jobs.json", content);
   }
 } else if (process.argv[2] === "write") {
   if (!(await api(`/git/ref/heads/${branch}`))) {

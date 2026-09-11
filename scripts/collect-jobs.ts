@@ -7,6 +7,10 @@ import {
 } from "../lib/contracts";
 import { feedSchema, type LiveFeed } from "../lib/live";
 import configs from "./sources.json";
+import { careerRelated } from "../lib/career";
+import { scoreJob } from "../lib/engine";
+import { sampleProfile } from "../lib/sample";
+import { broadSearch, deduplicateFeed } from "./broad-search";
 
 type Board = (typeof configs)[number];
 // ATS responses are untrusted. Narrow individual fields; validate the normalized output.
@@ -68,7 +72,7 @@ function categoryFor(title: string): JobInput["category"] {
 }
 function relevant(title: string) {
   return (
-    /event|production|producer|stage|broadcast|video|media|content|studio|editor|venue|programming|experiential|activation|banquet|conference/i.test(
+    /event|production|producer|stage|broadcast|video|media|content|studio|editor|venue|programming|experiential|activation|banquet|conference|communications|publicity|journalis|reporter|audiovisual/i.test(
       title,
     ) &&
     !/software|engineer|accountant|cook|chef|bartender|server|sales director/i.test(
@@ -106,7 +110,7 @@ function normalize(b: Board, raw: Raw, now: number): JobInput | null {
       : str(cats.location);
   const county = countyFor(location);
   const title = str(gh ? raw.title : sr ? raw.name : raw.text);
-  if (!county || !relevant(title)) return null;
+  if (!county) return null;
   const sections = obj(obj(raw.jobAd).sections);
   const description = plain(
     gh
@@ -128,6 +132,7 @@ function normalize(b: Board, raw: Raw, now: number): JobInput | null {
   );
   if (description.length < 30)
     throw new Error("Source returned an incomplete job description");
+  if (!careerRelated({ title, description }, sampleProfile)) return null;
   const url = str(gh ? raw.absolute_url : sr ? raw.postingUrl : raw.hostedUrl);
   const applyUrl =
     str(sr ? raw.applyUrl : gh ? raw.absolute_url : raw.applyUrl) || url;
@@ -333,7 +338,11 @@ async function discover(
       );
     if (!raw.id) throw new Error("Posting ID missing");
     const input = normalize(b, raw, now);
-    if (input)
+    if (
+      input &&
+      scoreJob(input, sampleProfile, now).total >= 30 &&
+      !scoreJob(input, sampleProfile, now).rejection
+    )
       records.push({
         id: `ats:${boardId(b)}:${String(raw.id)}`,
         board: boardId(b),
@@ -396,6 +405,13 @@ export async function collect(
       console.error(`${b.name}: ${error}`);
     }
   }
+  const broad = await broadSearch(previous, now, {
+    plain,
+    countyFor,
+    dateValue,
+    categoryFor,
+    get,
+  });
   const feed = feedSchema.parse({
     version: 1,
     attemptedAt: time,
@@ -403,8 +419,19 @@ export async function collect(
       successful.size === configs.length
         ? time
         : previous?.lastSuccessfulAt || null,
-    sources,
-    jobs: reconcile(previous?.jobs || [], current, successful, now, listedIds),
+    sources: [...sources, ...broad.sources],
+    searchState: broad.searchState,
+    leads: broad.leads,
+    jobs: deduplicateFeed([
+      ...reconcile(
+        previous?.jobs.filter((j) => !j.id.startsWith("web:")) || [],
+        current,
+        successful,
+        now,
+        listedIds,
+      ),
+      ...broad.jobs,
+    ]),
   });
   await mkdir("public/data", { recursive: true });
   await writeFile(output, JSON.stringify(feed));

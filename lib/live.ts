@@ -31,9 +31,36 @@ export const feedSchema = z.object({
       count: z.number(),
       error: z.string(),
       lastSuccessfulAt: z.iso.datetime({ offset: true }).nullable(),
+      mode: z
+        .enum(["live", "cached", "needs_key", "error", "quota"])
+        .optional(),
+      checkedAt: z.iso.datetime({ offset: true }).nullable().optional(),
+      nextCheckAt: z.iso.datetime({ offset: true }).nullable().optional(),
+      examined: z.number().optional(),
+      rejected: z.number().optional(),
+      note: z.string().optional(),
     }),
   ),
   jobs: z.array(feedRecordSchema),
+  searchState: z
+    .object({
+      windowStartedAt: z.iso.datetime({ offset: true }),
+      used: z.number().int().min(0),
+      queryIndex: z.number().int().min(0),
+    })
+    .nullable()
+    .default(null),
+  leads: z
+    .array(
+      z.object({
+        url: z.string().url(),
+        title: z.string(),
+        snippet: z.string(),
+        foundAt: z.iso.datetime({ offset: true }),
+        market: z.enum(["miami", "charleston"]),
+      }),
+    )
+    .default([]),
 });
 export type LiveFeed = z.infer<typeof feedSchema>;
 export function emptyLiveState(): RadarState {

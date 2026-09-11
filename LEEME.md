@@ -1,43 +1,56 @@
-# Activar los empleos reales de Qiqi
+# Activar la búsqueda amplia de Qiqi
 
-Ya está preparado el código para buscar en fuentes oficiales cada 15 minutos, sin pagar un servidor. Para activarlo en tu web hay que subir esta versión a GitHub. La programación no está activa solo por descargar el paquete.
+Esta actualización cambia el mínimo a 30/100 y exige relación con la carrera y habilidades de Qiqi. Combina fuentes directas con Remotive, Jobicy, Himalayas, Google Jobs y descubrimiento de páginas mediante Google.
 
-## 1. Subir los archivos actualizados
+## 1. Crear la cuenta gratuita de Google Jobs / SerpApi
 
-Descomprime `qiqi-job-radar-live.zip` y abre la carpeta `qiqi-job-radar` que contiene.
+Abre https://serpapi.com/users/sign_up y elige Free ($0). Actualmente incluye 250 búsquedas al mes. No elijas un plan de pago ni actives renovación automática de pago. Dentro de tu cuenta encontrarás tu API key.
 
-Abre https://github.com/yericyeric/qiqi-jobs-radar/upload/main e inicia sesión si GitHub te lo pide. Arrastra el CONTENIDO de la carpeta, incluidos `components`, `lib`, `scripts`, `public`, `tests`, `package.json` y los demás archivos. No arrastres el ZIP ni la carpeta exterior `qiqi-job-radar`. Deben quedar al mismo nivel que los archivos que ya están en GitHub. Pulsa Commit changes para guardar en main.
+Abre https://github.com/yericyeric/qiqi-jobs-radar/settings/secrets/actions y pulsa New repository secret.
 
-Si GitHub ignora la carpeta oculta `.github`, el siguiente paso sustituye el archivo de publicación directamente.
+Name: SERPAPI_API_KEY
+Secret: pega la clave de SerpApi.
 
-## 2. Cambiar el archivo que publica la página
+Pulsa Add secret. No compartas la clave en el chat, no la pongas en un archivo del repositorio y no le añadas el prefijo NEXT_PUBLIC.
+
+## 2. Subir la versión nueva
+
+Descomprime qiqi-job-radar-amplio.zip y abre la carpeta qiqi-job-radar.
+
+En https://github.com/yericyeric/qiqi-jobs-radar/upload/main arrastra el contenido de esa carpeta, no el ZIP ni la carpeta exterior. Deben quedar components, lib, scripts, public, tests y package.json al mismo nivel que los archivos actuales. Pulsa Commit changes para guardar en main.
+
+## 3. Actualizar la publicación
 
 Abre https://github.com/yericyeric/qiqi-jobs-radar/edit/main/.github/workflows/pages.yml
 
-Borra el contenido del editor y pega TODO el contenido de `publicar-qiqi.txt`, entregado junto a este paquete. Empieza por `name: Publish Qiqi live jobs`. No pegues esta guía dentro del editor.
+Reemplaza TODO el contenido del editor por el de publicar-qiqi.txt que acompaña esta actualización. Guarda con Commit changes en main. Es importante reemplazar el archivo anterior: este conecta el secreto de SerpApi con las búsquedas. Si GitHub ignoró la carpeta oculta .github al subir archivos, este paso instala igualmente el cambio principal.
 
-Pulsa Commit changes y guarda directamente en main. No crees un segundo archivo de publicación: reemplaza `pages.yml`.
+## 4. Ejecutar y comprobar
 
-## 3. Comprobar que se publicó
+Abre https://github.com/yericyeric/qiqi-jobs-radar/actions. Selecciona Publish Qiqi live jobs y, si no se inició una ejecución nueva, pulsa Run workflow → main → Run workflow.
 
-Abre https://github.com/yericyeric/qiqi-jobs-radar/actions
+Cuando build y deploy estén verdes, abre https://yericyeric.github.io/qiqi-jobs-radar/ y recarga. Debes ver 30+ possible fit. En Sources & activity aparecen cada portal, sus resultados, su última revisión y su siguiente búsqueda. Google no debe decir Waiting for free API key. Si la clave aún falta, los portales públicos siguen funcionando.
 
-Debe aparecer `Publish Qiqi live jobs`. Normalmente se inicia al guardar. Si no hay una ejecución nueva, selecciona ese nombre y pulsa Run workflow → main → Run workflow.
+## Frecuencias y coste
 
-Espera a que build y deploy estén verdes. Abre https://yericyeric.github.io/qiqi-jobs-radar/ y recarga la página. Debe decir `Real job listings`, mostrar la hora de búsqueda y las fuentes disponibles. A partir de ahí GitHub intentará actualizar en intervalos de 15 minutos, aunque puede retrasarse. Tu computadora puede estar apagada.
+GitHub publica una actualización cada 15 minutos aproximadamente. Eso no significa que todos los portales permitan una búsqueda nueva cada 15 minutos.
 
-## Qué incluye y qué esperar
+- Fuentes directas de empleadores: cada 15 minutos.
+- Remotive y Jobicy: cada 6 horas, respetando sus límites. Remotive publica en su API con un retraso de 24 horas.
+- Himalayas: una revisión diaria de hasta 1.000 anuncios recientes, con selección local de puestos remotos compatibles con Estados Unidos o sin restricción geográfica.
+- Google Jobs: una búsqueda por ciudad cada 8 horas; rota entre eventos, producción y medios/contenido.
+- Google general: una búsqueda cada 48 horas, alternando Miami y Charleston.
 
-Busca en siete empresas configuradas mediante Greenhouse, Lever y SmartRecruiters. Cubre Miami/South Florida y Charleston SC, incluido Johns Island. No es una búsqueda de todos los empleos de internet. Las opciones iniciales siguen siendo últimas 48 horas y afinidad mínima 70/100. Una lista vacía puede ser correcta; amplía los filtros para revisar ofertas anteriores. Revisa los requisitos del empleador antes de aplicar.
+El código limita Google Jobs + Google general a 210 solicitudes por ventana de 31 días. Al llegar al límite, pausa esas búsquedas. La clave debe ser de una cuenta Free; otros usos de la misma clave también consumen la cuota de SerpApi. Esta versión no compra créditos ni cambia tu plan.
 
-Las notas y candidaturas permanecen en el navegador de Qiqi. No se sincronizan entre dispositivos ni se suben al repositorio. Exporta una copia desde Sources & activity antes de borrar datos del navegador. No envía solicitudes ni correos automáticamente.
+## Cómo se analizan los resultados
 
-Mantén el repositorio público y el runner estándar incluido. No necesitas tarjeta, servidor, base de datos ni claves de una API de empleo. Los intervalos de GitHub son aproximados. Si deja de actualizar, mira Actions; GitHub puede desactivar programaciones tras un periodo prolongado sin actividad del repositorio.
+Primero se descartan empleos ajenos a su carrera, localizaciones incompatibles y ventas engañosas. Después se calcula afinidad por responsabilidades, habilidades, nivel, antigüedad y posibilidad de aplicar. A partir de 30/100 pueden entrar como Possible fit: los requisitos desconocidos siguen pendientes, no se dan por cumplidos. Los filtros iniciales mantienen últimas 48 horas y priorizan el último día; puedes ampliarlos para ver oportunidades anteriores.
 
-## Si una ejecución falla
+Las ofertas de Google Jobs se analizan con su descripción y conservan la fuente. Fechas como “3 hours ago” se etiquetan estimated, no se convierten en fechas originales confirmadas. Las páginas de Google general que parecen relevantes se muestran aparte como Promising pages from web search; pueden ser bolsas de trabajo, directorios o páginas de empresas, no necesariamente una oferta vigente.
 
-Abre la ejecución roja y el paso rojo. Un error 403 en Preserve job facts indica que GitHub bloquea la escritura del token: revisa Settings → Actions → General → Workflow permissions, selecciona Read and write permissions si está disponible, guarda y vuelve a ejecutar. Una política de organización puede impedir esa opción.
+La búsqueda amplia no está restringida a siete empresas. Las siete originales quedan como seguimiento adicional. Ningún servicio cubre toda la web; la sección de fuentes muestra qué se consultó realmente. LinkedIn, Indeed u otros portales pueden aparecer en resultados del buscador, pero esta versión no afirma consultar directamente sus páginas ni sortea bloqueos.
 
-Si falla la publicación, Settings → Pages → Source debe seguir en GitHub Actions. Si aparece una fuente no disponible dentro de la app, las demás pueden seguir funcionando y se conserva la última información de esa fuente.
+Las notas, guardados y candidaturas permanecen en el navegador de Qiqi. No se suben a GitHub ni se sincronizan entre dispositivos. Exporta una copia desde Sources & activity antes de borrar datos del navegador. No se envían solicitudes ni correos automáticamente.
 
-`qiqi-job-radar-pages.zip` contiene una compilación estática para el subdirectorio `/qiqi-jobs-radar`; por sí sola no programa búsquedas. El paquete de código y el workflow son los que activan las actualizaciones.
+Si falla una ejecución, abre el paso rojo en Actions. Si Google indica error, comprueba que SERPAPI_API_KEY existe, que la clave sigue activa y que la cuota gratuita no se agotó. Si falla Preserve job facts con 403, revisa Settings → Actions → General → Workflow permissions. Pages debe seguir configurado con Source: GitHub Actions.

@@ -50,6 +50,7 @@ import {
 } from "../lib/contracts";
 import { makeSample } from "../lib/sample";
 import { act, refresh, importJobs } from "../lib/state";
+import { careerRelated } from "../lib/career";
 import {
   ageHours,
   freshness,
@@ -107,13 +108,14 @@ async function api(path: string, method = "GET", body?: unknown) {
 }
 function timeLabel(j: Job) {
   const h = ageHours(j);
-  return !Number.isFinite(h)
+  const label = !Number.isFinite(h)
     ? "Posting date unknown"
     : h < 1
       ? "Posted <1h ago"
       : h < 48
         ? `Posted ${Math.floor(h)}h ago`
         : `Posted ${Math.floor(h / 24)}d ago`;
+  return posting(j)?.estimated ? `${label} · estimated` : label;
 }
 const pretty = (s: string) =>
   s
@@ -227,7 +229,7 @@ export default function RadarApp() {
     [key, setKey] = useState("");
   const [query, setQuery] = useState(""),
     [hours, setHours] = useState("48"),
-    [fit, setFit] = useState("70"),
+    [fit, setFit] = useState("30"),
     [county, setCounty] = useState("Any"),
     [category, setCategory] = useState("Any"),
     [status, setStatus] = useState("Any"),
@@ -416,7 +418,7 @@ export default function RadarApp() {
   function switchMarket(next: Market) {
     setMarket(next);
     setHours("48");
-    setFit("70");
+    setFit("30");
     setSort("recent-fit");
     setCounty("Any");
     setCategory("Any");
@@ -452,6 +454,8 @@ export default function RadarApp() {
     state?.jobs.filter(
       (j) =>
         !dismissed(state.history, j) &&
+        careerRelated(j, state.profile) &&
+        !j.score.rejection &&
         inMarket(j.organization, market) &&
         !["CLOSED", "EXPIRED"].includes(j.status),
     ) || [];
@@ -466,7 +470,7 @@ export default function RadarApp() {
       (j) =>
         inMarket(j.organization, market) &&
         (view === "saved" || ageHours(j) <= Number(hours)) &&
-        j.score.total >= Number(fit) &&
+        j.score.total >= Math.max(30, Number(fit)) &&
         (county === "Any" || j.organization.county === county) &&
         (category === "Any" || j.category === category) &&
         (status === "Any" || j.status === status) &&
@@ -607,7 +611,9 @@ export default function RadarApp() {
             <section className="market-switch" aria-label="Job search location">
               <div>
                 <strong>Where’s your next chapter?</strong>
-                <p>Fresh opportunities for Qiqi · 48 hours · 70+ fit</p>
+                <p>
+                  Fresh opportunities for Qiqi · 48 hours · 30+ possible fit
+                </p>
               </div>
               <div
                 className="market-buttons"
@@ -643,8 +649,8 @@ export default function RadarApp() {
             {LIVE && (
               <div className="demo-banner" role="status">
                 <span>
-                  <strong>Real job listings</strong> · Scheduled every 15
-                  minutes; GitHub may delay runs.
+                  <strong>Real job listings</strong> · Radar updates every 15
+                  minutes; each source has its own search interval.
                   {feed ? (
                     <>
                       {" "}
@@ -666,12 +672,47 @@ export default function RadarApp() {
                   )}
                   {feedError && <strong> {feedError}</strong>}
                   <br />
-                  Miami / South Florida and Charleston, SC. Only configured
-                  employers are searched. Your saved jobs and notes stay in this
-                  browser.
+                  Miami / South Florida, Charleston SC and eligible remote
+                  roles. Career-related jobs only · 30+ possible fit. Your notes
+                  stay in this browser.
+                  {feed?.sources.some((s) => s.mode === "needs_key") && (
+                    <>
+                      <br />
+                      <strong>
+                        Google search is waiting for the SerpApi key. Free
+                        public feeds remain available.
+                      </strong>
+                    </>
+                  )}
                 </span>
               </div>
             )}
+            {LIVE &&
+              view === "radar" &&
+              !!feed?.leads.filter((l) => l.market === market).length && (
+                <details
+                  className="panel"
+                  style={{ padding: "16px", marginBottom: "16px" }}
+                >
+                  <summary>
+                    Promising pages from web search · review needed
+                  </summary>
+                  <p>
+                    These pages mention relevant work. They are search leads,
+                    not confirmed vacancies; posting dates and employer
+                    requirements still need checking.
+                  </p>
+                  {feed.leads
+                    .filter((l) => l.market === market)
+                    .map((l) => (
+                      <p key={l.url}>
+                        <External href={l.url}>{l.title}</External>
+                        <br />
+                        {l.snippet}
+                      </p>
+                    ))}
+                </details>
+              )}
             {error && (
               <div className="message error" role="alert">
                 {error}
@@ -782,7 +823,7 @@ export default function RadarApp() {
                         className="stat-card"
                         onClick={() => {
                           setHours("24");
-                          setFit("70");
+                          setFit("30");
                         }}
                       >
                         <span>
@@ -924,7 +965,7 @@ export default function RadarApp() {
                                 label: "Fit score",
                                 value: fit,
                                 set: setFit,
-                                options: ["60", "70", "80", "90", "0"],
+                                options: ["30", "50", "60", "70", "80", "90"],
                               },
                               {
                                 label: "Posted within",
@@ -1022,7 +1063,7 @@ export default function RadarApp() {
                             <Button
                               variant="ghost"
                               onClick={() => {
-                                setFit("70");
+                                setFit("30");
                                 setSort("recent-fit");
                                 setHours("48");
                                 setCounty("Any");
@@ -1328,12 +1369,12 @@ export default function RadarApp() {
                       <section className="panel">
                         <h3>
                           {LIVE
-                            ? "Scheduled employer searches"
+                            ? "Job boards & web searches"
                             : "Phase 1 · Manual discovery"}
                         </h3>
                         <p>
                           {LIVE ? (
-                            "Greenhouse, Lever and SmartRecruiters public employer feeds. Publication dates come from the source; jobs with unknown dates are excluded from the recent filter. Match scores are a guide: review each employer’s requirements. Email alerts are not enabled."
+                            "The radar combines employer feeds, Remotive, Jobicy, Himalayas and Google Jobs through SerpApi. General Google searches also find pages to review. Every job must relate to Qiqi’s career and reach 30/100. Search-engine dates are labeled estimates. Review employer requirements before applying."
                           ) : (
                             <>
                               Import employer source records and record your
@@ -1350,9 +1391,18 @@ export default function RadarApp() {
                                 {source.name}
                               </External>{" "}
                               ·{" "}
-                              {source.ok
-                                ? `${source.count} local roles found`
-                                : `Unavailable: ${source.error}`}
+                              {source.mode === "needs_key"
+                                ? "Waiting for free API key"
+                                : source.mode === "quota"
+                                  ? "Free search budget paused"
+                                  : source.ok
+                                    ? `${source.count} possible fits${source.mode === "cached" ? " · cached until next search" : ""}`
+                                    : `Unavailable: ${source.error}`}
+                              {!!source.examined && (
+                                <> · {source.examined} listings examined</>
+                              )}
+                              <br />
+                              {source.note}
                               <br />
                               Last successful check:{" "}
                               {source.lastSuccessfulAt
@@ -1360,8 +1410,24 @@ export default function RadarApp() {
                                     source.lastSuccessfulAt,
                                   ).toLocaleString()
                                 : "Not yet"}
+                              {source.nextCheckAt && (
+                                <>
+                                  <br />
+                                  Next search no earlier than{" "}
+                                  {new Date(
+                                    source.nextCheckAt,
+                                  ).toLocaleString()}
+                                </>
+                              )}
                             </p>
                           ))}
+                        {LIVE && feed?.searchState && (
+                          <p>
+                            Google search budget: {feed.searchState.used}/210
+                            requests in this 31-day window. Includes Google Jobs
+                            and general web discovery.
+                          </p>
+                        )}
                         <div className="status-line">
                           <span className="badge">Manual import ready</span>
                           <span className="badge neutral">
@@ -1690,6 +1756,16 @@ function JobCard({
             "Review responsibilities and requirements"}
         </p>
       </div>
+      {!j.isDemo && (
+        <div className="job-meta">
+          Sources:{" "}
+          {[...new Map(j.sources.map((s) => [s.name, s])).values()].map((s) => (
+            <External key={s.name} href={s.url}>
+              {s.name}
+            </External>
+          ))}
+        </div>
+      )}
       <div className="card-footer">
         <span>
           <Clock3 size={14} />
@@ -1861,7 +1937,7 @@ function JobDetails({
             <dt>Last checked</dt>
             <dd>
               {j.verification
-                ? `${new Date(j.verification.checkedAt).toLocaleString()} · ${j.verification.method === "AUTOMATED_ATS" ? "Employer ATS check" : "Manual evidence"}`
+                ? `${new Date(j.verification.checkedAt).toLocaleString()} · ${j.verification.method === "AUTOMATED_ATS" ? "Employer ATS check" : j.verification.method === "AUTOMATED_BOARD" ? "Job board listing; employer unverified" : "Manual evidence"}`
                 : "Not verified"}
             </dd>
           </div>
