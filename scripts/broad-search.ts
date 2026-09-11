@@ -587,7 +587,7 @@ export async function broadSearch(
   }
   for (const city of cities) {
   await run(
-    `google-web-v3:${city.id}`,
+    `google-web-v4:${city.id}`,
     `Job boards · ${city.name} (Google search)`,
     "https://www.google.com",
     24,
@@ -596,7 +596,7 @@ export async function broadSearch(
       const portals = "(site:indeed.com/viewjob OR site:linkedin.com/jobs/view OR site:glassdoor.com/job-listing OR site:ziprecruiter.com/c OR site:monster.com/job-openings OR site:simplyhired.com/job OR site:entertainmentcareers.net OR site:productionhub.com/job OR site:staffmeup.com/jobs OR site:teamworkonline.com)";
       const query = `("event coordinator" OR "production assistant" OR "video editor" OR stagehand OR "content producer") "${city.name.split(",")[0]}" ${portals} -remote -"work from home"`;
       const params = new URLSearchParams({
-        engine: "google",
+        engine: "google_light",
         q: query,
         hl: "en",
         gl: "us",
@@ -634,7 +634,7 @@ export async function broadSearch(
               const location = [address.addressLocality, address.addressRegion, address.addressCountry].map(str).filter(Boolean).join(", ");
               const county = helpers.countyFor(location);
               if (!county || (city.id === "charleston" ? county !== "Charleston" : county === "Charleston")) continue;
-              record = makeRecord({ id: `google-web-v3:${city.id}`, name: portal, url }, {
+              record = makeRecord({ id: `google-web-v4:${city.id}`, name: portal, url }, {
                 id: url, title: str(listing.title), company: str(obj(listing.hiringOrganization).name),
                 location, description: str(listing.description), url,
                 posted: helpers.dateValue(listing.datePosted, now),
