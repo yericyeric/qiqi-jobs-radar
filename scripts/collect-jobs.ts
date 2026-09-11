@@ -82,7 +82,7 @@ function relevant(title: string) {
 }
 async function get(url: string): Promise<unknown> {
   const response = await fetch(url, {
-    signal: AbortSignal.timeout(20000),
+    signal: AbortSignal.timeout(new URL(url).hostname === "serpapi.com" ? 120000 : 20000),
     headers: {
       Accept: "application/json",
       "User-Agent": "QiqiJobRadar/1.0 (public job listings)",
