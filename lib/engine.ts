@@ -245,7 +245,7 @@ export function scoreJob(
   );
   if (!meaningful.length) total = Math.min(total, 45);
   if (rejection) total = Math.min(total, 15);
-  if (!rejection && total < 30) rejection = "LOW_FIT";
+  if (!rejection && total < 15) rejection = "LOW_FIT";
   return {
     total,
     label:
@@ -255,7 +255,7 @@ export function scoreJob(
           ? "Strong Match"
           : total >= 70
             ? "Good Match"
-            : total >= 30
+            : total >= 15
               ? "Possible fit"
               : "Low fit",
     components,
