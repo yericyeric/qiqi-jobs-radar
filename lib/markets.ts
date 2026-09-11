@@ -1,6 +1,13 @@
 import type { Job, Organization } from "./contracts";
 import { ageHours } from "./engine";
 export type Market = "miami" | "charleston";
+export function localVacancyText(title: string, snippet: string, market: Market) {
+  const local = market === "miami" ? /miami|doral|fort lauderdale|broward|palm beach/i : /charleston|mount pleasant/i;
+  const text = title + " " + snippet;
+  if (!local.test(text) || /\bremote\b|work from home/i.test(text)) return false;
+  const explicitLocation = title.match(/(?:[—–|]|\bin\b)\s*([^—–|]+,\s*[A-Z]{2})\b/);
+  return !explicitLocation || local.test(explicitLocation[1]);
+}
 /** Only individual vacancy URLs; never a portal's results/category pages. */
 export function directJobPortal(link: string): string | null {
   try {
