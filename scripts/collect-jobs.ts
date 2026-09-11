@@ -340,7 +340,7 @@ async function discover(
     const input = normalize(b, raw, now);
     if (
       input &&
-      scoreJob(input, sampleProfile, now).total >= 30 &&
+      scoreJob(input, sampleProfile, now).total >= 15 &&
       !scoreJob(input, sampleProfile, now).rejection
     )
       records.push({
