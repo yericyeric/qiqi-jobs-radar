@@ -52,6 +52,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Search official employer feeds
         run: pnpm collect:jobs
+        env:
+          SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
       - name: Preserve job facts across runs
         run: node scripts/feed-storage.mjs write
         env:
@@ -74,3 +76,4 @@ jobs:
       - name: Publish live radar
         id: deployment
         uses: actions/deploy-pages@v4
+
