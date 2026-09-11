@@ -9,7 +9,7 @@ import type { LiveFeed } from "../lib/live";
 import { careerRelated } from "../lib/career";
 import { scoreJob, canonicalUrl, duplicate } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
-import { directJobPortal } from "../lib/markets";
+import { directJobPortal, localVacancyText } from "../lib/markets";
 
 type Raw = Record<string, unknown>;
 const obj = (x: unknown): Raw =>
@@ -613,7 +613,7 @@ export async function broadSearch(
         .filter(
           (r) =>
             !!directJobPortal(str(r.link)) &&
-            (city.id === "miami" ? /miami|doral|fort lauderdale|broward|palm beach/i : /charleston|mount pleasant|north charleston/i).test(str(r.title) + " " + str(r.snippet)) &&
+            localVacancyText(str(r.title), str(r.snippet), city.id) &&
             !/\bremote\b|work from home/i.test(str(r.title) + " " + str(r.snippet)) &&
             careerRelated(
               { title: str(r.title), description: str(r.snippet) },
