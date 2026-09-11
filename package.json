@@ -1,0 +1,52 @@
+{
+  "name": "qiqi-job-radar",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "build:pages": "cross-env RADAR_DEMO=true NEXT_PUBLIC_DEMO=true next build --webpack",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --configLoader=native",
+    "format": "prettier --write .",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "@radix-ui/react-slot": "^1.2.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-socket": "^0.2.11",
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.0",
+    "prettier": "^3.9.6",
+    "prisma": "^6.19.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  },
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

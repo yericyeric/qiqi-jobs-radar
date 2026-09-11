@@ -1,0 +1,538 @@
+[
+  {
+    "title": "Production Coordinator",
+    "organization": {
+      "id": "o1",
+      "name": "Daylight Live Studio",
+      "website": "https://example.com/o1",
+      "type": "Independent production company",
+      "city": "Miami",
+      "county": "Miami-Dade",
+      "careersUrl": "https://example.com/o1/careers",
+      "contactUrl": "https://example.com/o1/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o1/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Miami, FL",
+    "category": "Production",
+    "employmentType": "Full-time",
+    "description": "Coordinate live event production, crew scheduling and event logistics. Support run-of-show execution, backstage teams and vendors.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/1",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-09-05T13:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "Relevant event or media coordination experience preferred",
+        "required": false,
+        "assessment": "MET",
+        "sourceUrl": "https://example.com/demo-jobs/1"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/1",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  },
+  {
+    "title": "Event Operations Coordinator",
+    "organization": {
+      "id": "o2",
+      "name": "Parallel Experiences",
+      "website": "https://example.com/o2",
+      "type": "Experiential agency",
+      "city": "Fort Lauderdale",
+      "county": "Broward",
+      "careersUrl": "https://example.com/o2/careers",
+      "contactUrl": "https://example.com/o2/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o2/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Fort Lauderdale, FL",
+    "category": "Experiential",
+    "employmentType": "Full-time",
+    "description": "Support experiential brand activation and event operations. Coordinate teams, vendor scheduling, production support and event logistics.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/2",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-09-05T08:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "Relevant event or media coordination experience preferred",
+        "required": false,
+        "assessment": "MET",
+        "sourceUrl": "https://example.com/demo-jobs/2"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/2",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  },
+  {
+    "title": "Stage & Venue Assistant",
+    "organization": {
+      "id": "o3",
+      "name": "Harbor Performing Arts",
+      "website": "https://example.com/o3",
+      "type": "Independent venue",
+      "city": "Miami Beach",
+      "county": "Miami-Dade",
+      "careersUrl": "https://example.com/o3/careers",
+      "contactUrl": "https://example.com/o3/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o3/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Miami Beach, FL",
+    "category": "Stage",
+    "employmentType": "Part-time",
+    "description": "Support stage management, backstage coordination and venue operations. Assist crew scheduling, live event production and artist relations.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/3",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-09-05T00:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "Relevant event or media coordination experience preferred",
+        "required": false,
+        "assessment": "MET",
+        "sourceUrl": "https://example.com/demo-jobs/3"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/3",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  },
+  {
+    "title": "Content Production Coordinator",
+    "organization": {
+      "id": "o4",
+      "name": "Coastline Media Lab",
+      "website": "https://example.com/o4",
+      "type": "Broadcast & media studio",
+      "city": "Hollywood",
+      "county": "Broward",
+      "careersUrl": "https://example.com/o4/careers",
+      "contactUrl": "https://example.com/o4/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o4/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Hollywood, FL",
+    "category": "Media",
+    "employmentType": "Full-time",
+    "description": "Coordinate video and broadcast content production. Support production coordination, editing, crew scheduling and live event coverage.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/4",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-09-04T11:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "Relevant event or media coordination experience preferred",
+        "required": false,
+        "assessment": "MET",
+        "sourceUrl": "https://example.com/demo-jobs/4"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/4",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  },
+  {
+    "title": "Cultural Programs Coordinator",
+    "organization": {
+      "id": "o5",
+      "name": "Southside Arts Collective",
+      "website": "https://example.com/o5",
+      "type": "Cultural nonprofit",
+      "city": "Miami",
+      "county": "Miami-Dade",
+      "careersUrl": "https://example.com/o5/careers",
+      "contactUrl": "https://example.com/o5/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o5/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Miami, FL",
+    "category": "Cultural",
+    "employmentType": "Full-time",
+    "description": "Support cultural programs, performing arts and festival scheduling. Coordinate teams, event logistics and live event production.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/5",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-09-02T10:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "Relevant event or media coordination experience preferred",
+        "required": false,
+        "assessment": "MET",
+        "sourceUrl": "https://example.com/demo-jobs/5"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/5",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  },
+  {
+    "title": "Senior Event Producer",
+    "organization": {
+      "id": "o2",
+      "name": "Parallel Experiences",
+      "website": "https://example.com/o2",
+      "type": "Experiential agency",
+      "city": "Fort Lauderdale",
+      "county": "Broward",
+      "careersUrl": "https://example.com/o2/careers",
+      "contactUrl": "https://example.com/o2/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o2/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Fort Lauderdale, FL",
+    "category": "Events",
+    "employmentType": "Full-time",
+    "description": "Lead live event production, event logistics, vendor scheduling and experiential activations. Requires 8+ years of leadership experience.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/6",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-08-28T10:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "8+ years required",
+        "required": true,
+        "assessment": "GAP",
+        "sourceUrl": "https://example.com/demo-jobs/6"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/6",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  },
+  {
+    "title": "Live Production Coordinator",
+    "organization": {
+      "id": "o7",
+      "name": "Lowcountry Live Studio",
+      "website": "https://example.com/o7",
+      "type": "Independent production company",
+      "city": "Charleston, SC",
+      "county": "Charleston",
+      "careersUrl": "https://example.com/o7/careers",
+      "contactUrl": "https://example.com/o7/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o7/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Charleston, SC",
+    "category": "Production",
+    "employmentType": "Full-time",
+    "description": "Coordinate live event production, crew scheduling and event logistics. Support backstage teams, vendors and run-of-show execution.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/7",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-09-05T14:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "Relevant event or media coordination experience preferred",
+        "required": false,
+        "assessment": "MET",
+        "sourceUrl": "https://example.com/demo-jobs/7"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/7",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  },
+  {
+    "title": "Arts Event Coordinator",
+    "organization": {
+      "id": "o8",
+      "name": "Harbor Arts Charleston",
+      "website": "https://example.com/o8",
+      "type": "Cultural nonprofit",
+      "city": "Charleston, SC",
+      "county": "Charleston",
+      "careersUrl": "https://example.com/o8/careers",
+      "contactUrl": "https://example.com/o8/contact",
+      "publicEmail": "",
+      "publicPhone": "",
+      "publicContactPerson": "",
+      "contactPersonTitle": "",
+      "contactSource": "",
+      "size": "Small",
+      "sizeSource": "https://example.com/o8/about",
+      "affiliations": [],
+      "notes": "",
+      "isDemo": true,
+      "lastCheckedForJobs": null
+    },
+    "location": "Charleston, SC",
+    "category": "Cultural",
+    "employmentType": "Full-time",
+    "description": "Support cultural programs and performing arts, live event production and event logistics. Coordinate teams, vendors and festival scheduling.",
+    "applyUrl": "",
+    "salary": "",
+    "salarySource": "",
+    "sources": [
+      {
+        "name": "Fictional employer • sample data",
+        "url": "https://example.com/demo-jobs/8",
+        "kind": "EMPLOYER",
+        "externalId": "",
+        "originalPostedAt": "2026-09-04T14:00:00.000Z",
+        "sourcePostedText": "",
+        "estimatedPostedAt": null,
+        "capturedAt": "2026-09-05T17:00:00.000Z",
+        "evidence": "Fictional demonstration. This is not a real vacancy."
+      }
+    ],
+    "requirements": [
+      {
+        "text": "Relevant event or media coordination experience preferred",
+        "required": false,
+        "assessment": "MET",
+        "sourceUrl": "https://example.com/demo-jobs/8"
+      }
+    ],
+    "verification": {
+      "checkedAt": "2026-09-05T17:00:00.000Z",
+      "sourceUrl": "https://example.com/demo-jobs/8",
+      "sourceKind": "EMPLOYER",
+      "pageLoads": true,
+      "jobIdExists": true,
+      "applyExists": true,
+      "listedByEmployer": true,
+      "httpStatus": 200,
+      "closed": false,
+      "expired": false,
+      "method": "MANUAL",
+      "notes": "Simulated evidence for demonstration only."
+    },
+    "isDemo": true
+  }
+]

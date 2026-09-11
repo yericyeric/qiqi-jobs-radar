@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+model Candidate {
+  id String @id @default(cuid())
+  name String
+  profile Json
+  learnedPreferences Json @default("{}")
+  updatedAt DateTime @updatedAt
+  skills CandidateSkill[]
+  experience CandidateExperience[]
+  education CandidateEducation[]
+  actions UserJobAction[]
+  applications Application[]
+  alerts Alert[]
+  @@map("candidates")
+}
+model CandidateSkill {
+  id String @id @default(cuid())
+  candidateId String
+  candidate Candidate @relation(fields:[candidateId],references:[id],onDelete:Cascade)
+  name String
+  @@unique([candidateId,name])
+  @@map("candidate_skills")
+}
+model CandidateExperience {
+  id String @id @default(cuid())
+  candidateId String
+  candidate Candidate @relation(fields:[candidateId],references:[id],onDelete:Cascade)
+  description String
+  @@map("candidate_experience")
+}
+model CandidateEducation {
+  id String @id @default(cuid())
+  candidateId String
+  candidate Candidate @relation(fields:[candidateId],references:[id],onDelete:Cascade)
+  description String
+  @@map("candidate_education")
+}
+model Organization {
+  id String @id
+  name String
+  normalizedName String @unique
+  website String
+  organizationType String
+  city String
+  county String
+  details Json
+  lastCheckedForJobs DateTime?
+  jobs Job[]
+  contacts OrganizationContact[]
+  affiliations OrganizationAffiliation[]
+  sources OrganizationSource[]
+  @@map("organizations")
+}
+model OrganizationContact {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
+  details Json
+  sourceUrl String
+  @@map("organization_contacts")
+}
+model OrganizationAffiliation {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
+  label String
+  evidence String
+  sourceUrl String
+  publiclyExplicit Boolean
+  @@map("organization_affiliations")
+}
+model OrganizationSource {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields:[organizationId],references:[id],onDelete:Cascade)
+  url String
+  capturedAt DateTime @default(now())
+  @@map("organization_sources")
+}
+model Job {
+  id String @id @default(cuid())
+  companyId String
+  organization Organization @relation(fields:[companyId],references:[id])
+  title String
+  canonicalUrl String
+  location String
+  county String
+  category String
+  employmentType String
+  description String
+  originalPostedAt DateTime?
+  estimatedPostedAt DateTime?
+  discoveredAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  lastVerifiedAt DateTime?
+  activeStatus String @default("UNKNOWN")
+  freshnessConfidence String @default("Unknown")
+  fitScore Int
+  requirementMatch String
+  isRepost Boolean @default(false)
+  version Int @default(1)
+  details Json
+  sources JobSource[]
+  requirements JobRequirement[]
+  scores JobScore[]
+  verifications JobVerification[]
+  actions UserJobAction[]
+  applications Application[]
+  alerts Alert[]
+  @@index([fitScore,originalPostedAt])
+  @@index([companyId,title])
+  @@map("jobs")
+}
+model JobSource {
+  id String @id @default(cuid())
+  jobId String
+  job Job @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  url String
+  kind String
+  externalId String?
+  details Json
+  @@map("job_sources")
+}
+model JobRequirement {
+  id String @id @default(cuid())
+  jobId String
+  job Job @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  details Json
+  @@map("job_requirements")
+}
+model JobScore {
+  id String @id @default(cuid())
+  jobId String
+  job Job @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  total Int
+  details Json
+  createdAt DateTime @default(now())
+  @@map("job_scores")
+}
+model JobVerification {
+  id String @id @default(cuid())
+  jobId String
+  job Job @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  status String
+  details Json
+  checkedAt DateTime
+  @@map("job_verifications")
+}
+model UserJobAction {
+  id String @id @default(cuid())
+  candidateId String
+  candidate Candidate @relation(fields:[candidateId],references:[id],onDelete:Cascade)
+  jobId String
+  job Job @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  action String
+  version Int
+  at DateTime @default(now())
+  @@index([candidateId,jobId,at])
+  @@map("user_job_actions")
+}
+model Application {
+  id String @id @default(cuid())
+  candidateId String
+  candidate Candidate @relation(fields:[candidateId],references:[id],onDelete:Cascade)
+  jobId String
+  job Job @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  stage String
+  details Json
+  updatedAt DateTime @updatedAt
+  @@unique([candidateId,jobId])
+  @@map("applications")
+}
+model Alert {
+  id String @id @default(cuid())
+  candidateId String
+  candidate Candidate @relation(fields:[candidateId],references:[id],onDelete:Cascade)
+  jobId String
+  job Job @relation(fields:[jobId],references:[id],onDelete:Cascade)
+  channel String
+  sentAt DateTime?
+  @@unique([candidateId,jobId,channel])
+  @@map("alerts")
+}
+model SearchRun {
+  id String @id
+  source String
+  query String
+  at DateTime @default(now())
+  details Json
+  @@map("search_runs")
+}

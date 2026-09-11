@@ -1,0 +1,21 @@
+{
+  "id": "o8",
+  "name": "Harbor Arts Charleston",
+  "website": "https://example.com/o8",
+  "type": "Cultural nonprofit",
+  "city": "Charleston, SC",
+  "county": "Charleston",
+  "careersUrl": "https://example.com/o8/careers",
+  "contactUrl": "https://example.com/o8/contact",
+  "publicEmail": "",
+  "publicPhone": "",
+  "publicContactPerson": "",
+  "contactPersonTitle": "",
+  "contactSource": "",
+  "size": "Small",
+  "sizeSource": "https://example.com/o8/about",
+  "affiliations": [],
+  "notes": "",
+  "isDemo": true,
+  "lastCheckedForJobs": null
+}
