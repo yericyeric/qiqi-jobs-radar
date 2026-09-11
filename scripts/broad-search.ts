@@ -9,6 +9,7 @@ import type { LiveFeed } from "../lib/live";
 import { careerRelated } from "../lib/career";
 import { scoreJob, canonicalUrl, duplicate } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
+import { directJobPortal } from "../lib/markets";
 
 type Raw = Record<string, unknown>;
 const obj = (x: unknown): Raw =>
@@ -21,11 +22,28 @@ type Helpers = {
   dateValue: (v: unknown, now: number) => string | null;
   categoryFor: (title: string) => JobInput["category"];
   get: (url: string) => Promise<unknown>;
+  getPage?: (url: string) => Promise<string>;
 };
 type FeedRecord = LiveFeed["jobs"][number];
 type Status = LiveFeed["sources"][number];
 const HOUR = 3600000;
 const WINDOW = 31 * 24 * HOUR;
+export function jobPostingFromHtml(html: string): Raw | null {
+  const visit = (value: unknown, depth = 0): Raw | null => {
+    if (depth > 12 || !value || typeof value !== "object") return null;
+    if (Array.isArray(value)) {
+      for (const item of value) { const found = visit(item, depth + 1); if (found) return found; }
+      return null;
+    }
+    const item = obj(value), types = Array.isArray(item["@type"]) ? item["@type"] : [item["@type"]];
+    if (types.includes("JobPosting")) return item;
+    return visit(item["@graph"], depth + 1) || visit(item.mainEntity, depth + 1);
+  };
+  for (const match of html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+    try { const found = visit(JSON.parse(match[1])); if (found) return found; } catch { /* Invalid data is not a verified job. */ }
+  }
+  return null;
+}
 export const SEARCH_LIMIT = 210;
 export function budget(
   previous: LiveFeed["searchState"],
@@ -243,7 +261,7 @@ export async function broadSearch(
     sources: Status[] = [];
   const state = budget(previous?.searchState || null, now);
   let leads = (previous?.leads || []).filter(
-    (l) => now - Date.parse(l.foundAt) < 14 * 24 * HOUR,
+    (l) => !!directJobPortal(l.url) && now - Date.parse(l.foundAt) < 14 * 24 * HOUR,
   );
   async function run(
     id: string,
@@ -569,14 +587,14 @@ export async function broadSearch(
   }
   for (const city of cities) {
   await run(
-    `google-web-v2:${city.id}`,
+    `google-web-v3:${city.id}`,
     `Job boards · ${city.name} (Google search)`,
     "https://www.google.com",
     24,
     "Daily indexed search of Indeed, LinkedIn, Glassdoor, ZipRecruiter, Monster, SimplyHired, EntertainmentCareers, ProductionHUB, Staff Me Up and TeamWork Online. Results require review; this is not direct access to those platforms.",
     async () => {
-      const portals = "(site:indeed.com OR site:linkedin.com/jobs OR site:glassdoor.com OR site:ziprecruiter.com OR site:monster.com OR site:simplyhired.com OR site:entertainmentcareers.net OR site:productionhub.com OR site:staffmeup.com OR site:teamworkonline.com)";
-      const query = `("event coordinator" OR "production assistant" OR "video editor" OR stagehand OR "content producer") jobs "${city.name.split(",")[0]}" ${portals}`;
+      const portals = "(site:indeed.com/viewjob OR site:linkedin.com/jobs/view OR site:glassdoor.com/job-listing OR site:ziprecruiter.com/c OR site:monster.com/job-openings OR site:simplyhired.com/job OR site:entertainmentcareers.net OR site:productionhub.com/job OR site:staffmeup.com/jobs OR site:teamworkonline.com)";
+      const query = `("event coordinator" OR "production assistant" OR "video editor" OR stagehand OR "content producer") "${city.name.split(",")[0]}" ${portals} -remote -"work from home"`;
       const params = new URLSearchParams({
         engine: "google",
         q: query,
@@ -594,17 +612,48 @@ export async function broadSearch(
         .map(obj)
         .filter(
           (r) =>
-            /^https:\/\//.test(str(r.link)) &&
+            !!directJobPortal(str(r.link)) &&
+            (city.id === "miami" ? /miami|doral|fort lauderdale|broward|palm beach/i : /charleston|mount pleasant|north charleston/i).test(str(r.title) + " " + str(r.snippet)) &&
+            !/\bremote\b|work from home/i.test(str(r.title) + " " + str(r.snippet)) &&
             careerRelated(
               { title: str(r.title), description: str(r.snippet) },
               sampleProfile,
             ),
         );
+      const records: FeedRecord[] = [];
+      const pending: Raw[] = [];
+      for (const result of found) {
+        const url = str(result.link), portal = directJobPortal(url)!;
+        let record: FeedRecord | null = null;
+        try {
+          const listing = helpers.getPage ? jobPostingFromHtml(await helpers.getPage(url)) : null;
+          if (listing && listing.jobLocationType !== "TELECOMMUTE") {
+            const places = Array.isArray(listing.jobLocation) ? listing.jobLocation : [listing.jobLocation];
+            for (const place of places) {
+              const address = obj(obj(place).address);
+              const location = [address.addressLocality, address.addressRegion, address.addressCountry].map(str).filter(Boolean).join(", ");
+              const county = helpers.countyFor(location);
+              if (!county || (city.id === "charleston" ? county !== "Charleston" : county === "Charleston")) continue;
+              record = makeRecord({ id: `google-web-v3:${city.id}`, name: portal, url }, {
+                id: url, title: str(listing.title), company: str(obj(listing.hiringOrganization).name),
+                location, description: str(listing.description), url,
+                posted: helpers.dateValue(listing.datePosted, now),
+                dateText: `Publication date from ${portal} JobPosting data; local address supplied, confirm on-site schedule.`,
+                employment: Array.isArray(listing.employmentType) ? str(listing.employmentType[0]) : str(listing.employmentType),
+                expiry: str(listing.validThrough) || null,
+              }, helpers, now);
+              if (record) break;
+            }
+          }
+        } catch { /* Blocked pages remain unverified direct links; never invent details. */ }
+        if (record) records.push(record); else pending.push(result);
+      }
+      const checkedUrls = new Set(records.map((r) => canonicalUrl(r.input.applyUrl || "")));
       leads = [
         ...new Map(
           [
-            ...leads,
-            ...found.map((r) => ({
+            ...leads.filter((l) => !checkedUrls.has(canonicalUrl(l.url))),
+            ...pending.map((r) => ({
               url: str(r.link),
               title: helpers.plain(r.title),
               snippet: helpers.plain(r.snippet),
@@ -614,7 +663,7 @@ export async function broadSearch(
           ].map((l) => [l.market + ":" + canonicalUrl(l.url), l]),
         ).values(),
       ].slice(-80);
-      return { records: [], examined: data.organic_results.length };
+      return { records, examined: data.organic_results.length };
     },
     true,
   );
