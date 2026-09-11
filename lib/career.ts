@@ -17,7 +17,7 @@ export function careerRelated(
   const title = job.title,
     description = job.description;
   if (
-    /insurance|mortgage|loan officer|software|data engineer|machine learning|manufactur|assembly|warehouse|pharmaceutical|food factory|chemical|plant operator|factory|cybersecurity|accountant|nurse|physician|human resources|recruiter|talent sourc|sales representative/i.test(
+    /medical interpreter|interpreter|video data collect|insurance|mortgage|loan officer|software|data engineer|machine learning|manufactur|assembly|warehouse|pharmaceutical|food factory|chemical|plant operator|factory|cybersecurity|accountant|nurse|physician|human resources|recruiter|talent sourc|sales representative/i.test(
       title,
     )
   )

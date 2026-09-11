@@ -24,7 +24,23 @@ const makeFeed = () =>
     sources: [],
     jobs: [],
   });
-describe("broad discovery and 30-point career gate", () => {
+describe("broad discovery and 15-point career gate", () => {
+  it("keeps a career-related long shot between 15 and 29 without admitting unrelated video roles", () => {
+    const job = makeSample(now).jobs[0];
+    job.title = "Senior Studio Assistant";
+    job.description = "Organize props and prepare the studio for the creative team.";
+    job.organization.type = "Creative team";
+    job.sources.forEach((source) => {
+      source.originalPostedAt = "2020-01-01T00:00:00.000Z";
+      source.estimatedPostedAt = null;
+    });
+    const score = scoreJob(job, sampleProfile, now);
+    expect(score.total).toBeGreaterThanOrEqual(15);
+    expect(score.total).toBeLessThan(30);
+    expect(score.rejection).toBeNull();
+    expect(score.requirementMatch).toBe("LONG_SHOT");
+    expect(careerRelated({ title: "Video Medical Interpreter", description }, sampleProfile)).toBe(false);
+  });
   it("allows a related partial fit below 70 but rejects generic transferable skills", () => {
     const job = makeSample(now).jobs[0];
     job.title = "Studio Assistant";
@@ -97,7 +113,7 @@ describe("broad discovery and 30-point career gate", () => {
     );
     expect(get).toHaveBeenCalledTimes(3);
     expect(result.sources.filter((s) => s.mode === "needs_key")).toHaveLength(
-      3,
+      4,
     );
     expect(result.searchState.used).toBe(0);
   });
@@ -147,8 +163,8 @@ describe("broad discovery and 30-point career gate", () => {
     expect(result.jobs).toHaveLength(2);
     expect(result.jobs[0].input.sources[0].originalPostedAt).toBeNull();
     expect(ageHours(result.jobs[0].input, now)).toBe(4);
-    expect(result.leads).toHaveLength(1);
-    expect(result.searchState.used).toBe(3);
+    expect(result.leads).toHaveLength(2);
+    expect(result.searchState.used).toBe(4);
     const feed = { ...makeFeed(), ...result };
     get.mockClear();
     const repeated = await broadSearch(
@@ -176,7 +192,7 @@ describe("broad discovery and 30-point career gate", () => {
       { SERPAPI_API_KEY: "fixture-key" },
     );
     expect(get).toHaveBeenCalledTimes(3);
-    expect(paused.sources.filter((s) => s.mode === "quota")).toHaveLength(3);
+    expect(paused.sources.filter((s) => s.mode === "quota")).toHaveLength(4);
     const first = result.jobs[0],
       changed = structuredClone(first);
     changed.input.sources[0].estimatedPostedAt = new Date(now).toISOString();
