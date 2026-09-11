@@ -277,7 +277,9 @@ export async function broadSearch(
       jobs.push(...priorJobs);
       return;
     }
-    if (priorStatus?.nextCheckAt && Date.parse(priorStatus.nextCheckAt) > now) {
+    const legacySearchError = keyRequired && priorStatus?.mode === "error" &&
+      priorStatus.error === "Source unavailable or response invalid. Previous records retained; credentials are never logged.";
+    if (!legacySearchError && priorStatus?.nextCheckAt && Date.parse(priorStatus.nextCheckAt) > now) {
       sources.push({
         ...priorStatus,
         mode: priorStatus.ok ? "cached" : priorStatus.mode,
@@ -318,17 +320,21 @@ export async function broadSearch(
       console.log(
         `${name}: ${result.examined} examined, ${result.records.length} career-related possible fits`,
       );
-    } catch {
+    } catch (error) {
+      const reason = error instanceof Error && error.name === "TimeoutError"
+        ? "Request timed out"
+        : error instanceof Error && /^Source returned HTTP \d{3}$/.test(error.message)
+          ? error.message
+          : "Network error or invalid response";
       jobs.push(...priorJobs);
       sources.push({
         ...base,
         mode: "error",
-        error:
-          "Source unavailable or response invalid. Previous records retained; credentials are never logged.",
+        error: `${reason}. Previous records retained; credentials are never logged.`,
         checkedAt: new Date(now).toISOString(),
         nextCheckAt,
       });
-      console.error(`${name}: source unavailable; retaining previous records`);
+      console.error(`${name}: ${reason}; retaining previous records`);
     }
   }
   const remotive = {
