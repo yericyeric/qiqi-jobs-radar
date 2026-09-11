@@ -74,6 +74,7 @@ import {
 } from "../lib/live";
 import {
   inMarket,
+  directJobPortal,
   compareRecentFit,
   marketLabels,
   type Market,
@@ -230,6 +231,7 @@ export default function RadarApp() {
   const [query, setQuery] = useState(""),
     [hours, setHours] = useState("48"),
     [fit, setFit] = useState("15"),
+    [locationScope, setLocationScope] = useState("local"),
     [county, setCounty] = useState("Any"),
     [category, setCategory] = useState("Any"),
     [status, setStatus] = useState("Any"),
@@ -463,6 +465,7 @@ export default function RadarApp() {
   const jobs =
     state?.jobs.filter(
       (j) =>
+        (locationScope === "all" || (locationScope === "remote" ? j.organization.county === "Remote" : j.organization.county !== "Remote")) &&
         !dismissed(state.history, j) &&
         careerRelated(j, state.profile) &&
         !j.score.rejection &&
@@ -498,11 +501,11 @@ export default function RadarApp() {
           .includes(query.toLowerCase()),
     )
     .sort((a, b) =>
-      sort === "recent-fit"
+      (Number(a.organization.county === "Remote") - Number(b.organization.county === "Remote")) || (sort === "recent-fit"
         ? compareRecentFit(a, b)
         : sort === "new"
           ? ageHours(a) - ageHours(b)
-          : b.score.total - a.score.total || ageHours(a) - ageHours(b),
+          : b.score.total - a.score.total || ageHours(a) - ageHours(b)),
     );
   return (
     <>
@@ -868,7 +871,7 @@ export default function RadarApp() {
                         </small>
                       </button>
                     </div>
-                    <div className="feed-layout">
+                    <div className="feed-layout" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
                       <section className="feed">
                         <div className="section-title">
                           <div>
@@ -902,6 +905,12 @@ export default function RadarApp() {
                             <SlidersHorizontal size={16} />
                             Filters
                           </Button>
+                        </div>
+                        <div className="quick-filters" role="group" aria-label="Work location">
+                          {[["local", "Local positions"], ["remote", "Remote"], ["all", "Local + remote"]].map(([value, label]) => (
+                            <Button key={value} variant={locationScope === value ? "default" : "outline"} aria-pressed={locationScope === value} onClick={() => setLocationScope(value)}>{label}</Button>
+                          ))}
+                          <span className="muted">Local address required; confirm the on-site or hybrid schedule with the employer.</span>
                         </div>
                         <div className="quick-filters">
                           <div role="group" aria-label="Posting age">
@@ -1095,50 +1104,16 @@ export default function RadarApp() {
                           )}
                         </div>
                       </section>
-                      <aside className="insights">
-                        <section className="hidden-card">
-                          <span className="aside-eyebrow">
-                            <Radio size={17} />
-                            BEYOND THE JOB BOARDS
-                          </span>
-                          <h3>
-                            Some doors are
-                            <br />
-                            worth knocking on.
-                          </h3>
-                          <p>
-                            Discover local teams where your experience could
-                            fit—even without an advertised opening.
-                          </p>
-                          <Button
-                            variant="outline"
-                            onClick={() => go("hidden")}
-                          >
-                            Explore Hidden Market
-                            <ArrowUpRight size={16} />
-                          </Button>
-                        </section>
-                        <div className="source-note">
-                          <CheckCheck size={19} />
-                          <p>
-                            Evidence before excitement.
-                            <br />
-                            <span>
-                              Open a match to check its source, date and
-                              verification details.
-                            </span>
-                          </p>
-                        </div>
-                      </aside>
+
                     </div>
                   </>
                 )}
                     {LIVE && view === "radar" && !!feed?.leads.some((l) => l.market === market) && (
                       <section className="web-discovery">
-                        <h2>More opportunities across job boards</h2>
-                        <p className="muted">Recent web search results for {marketLabels[market]}. Open each source to confirm the vacancy, date and requirements. These results are not scored or verified jobs.</p>
+                        <h2>Local vacancy links to review</h2>
+                        <p className="muted">Individual vacancy links for {marketLabels[market]}. Only direct job pages are included. Pages we could not read remain here for manual review; fully parsed listings enter the main radar. Confirm the posting date and on-site schedule.</p>
                         <div className="org-grid">
-                          {feed.leads.filter((l) => l.market === market && careerRelated({ title: l.title, description: l.snippet }, state.profile)).map((l) => (
+                          {feed.leads.filter((l) => l.market === market && !!directJobPortal(l.url) && !/\bremote\b|work from home/i.test(l.title + " " + l.snippet) && careerRelated({ title: l.title, description: l.snippet }, state.profile)).map((l) => (
                             <article className="panel" style={{ padding: 22 }} key={l.url}>
                               <span className="eyebrow">{new URL(l.url).hostname.replace(/^www\./, "")} · Review needed</span>
                               <h3><External href={l.url}>{l.title}</External></h3>
@@ -1315,7 +1290,18 @@ export default function RadarApp() {
                     />
                     <div className="admin-overview">
                       <section className="panel">
-                        <h3>
+                        <h3>Job portals</h3>
+                          <p>Individual vacancy pages discovered through Google, then read when publicly accessible. Search/category pages are excluded. These are not direct API connections.</p>
+                          <div className="org-grid">
+                            {[["LinkedIn", "linkedin.com"], ["Indeed", "indeed.com"], ["Glassdoor", "glassdoor.com"], ["ZipRecruiter", "ziprecruiter.com"], ["ProductionHUB", "productionhub.com"], ["EntertainmentCareers", "entertainmentcareers.net"], ["Staff Me Up", "staffmeup.com"], ["TeamWork Online", "teamworkonline.com"], ["Monster", "monster.com"], ["SimplyHired", "simplyhired.com"]].map(([name, domain]) => (
+                              <div key={domain} className="panel" style={{ padding: 14 }}>
+                                <strong>{name}</strong>
+                                <p>{feed?.jobs.filter((j) => j.input.sources.some((source) => directJobPortal(source.url) === name)).length || 0} parsed vacancies · {feed?.leads.filter((l) => directJobPortal(l.url) === name).length || 0} direct links pending review</p>
+                                <small>Indexed discovery · no direct API connection</small>
+                              </div>
+                            ))}
+                          </div>
+                          <h3>
                           {LIVE
                             ? "Job boards & web searches"
                             : "Phase 1 · Manual discovery"}
