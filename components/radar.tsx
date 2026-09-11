@@ -229,7 +229,7 @@ export default function RadarApp() {
     [key, setKey] = useState("");
   const [query, setQuery] = useState(""),
     [hours, setHours] = useState("48"),
-    [fit, setFit] = useState("30"),
+    [fit, setFit] = useState("15"),
     [county, setCounty] = useState("Any"),
     [category, setCategory] = useState("Any"),
     [status, setStatus] = useState("Any"),
@@ -241,6 +241,16 @@ export default function RadarApp() {
     [importing, setImporting] = useState<"jobs" | "organization" | null>(null),
     [editApp, setEditApp] = useState<Application | null>(null),
     [mobile, setMobile] = useState(false);
+  const profileClicks = useRef({ count: 0, last: 0 });
+  function openProfile() {
+    const now = Date.now();
+    profileClicks.current.count = now - profileClicks.current.last > 10000 ? 1 : profileClicks.current.count + 1;
+    profileClicks.current.last = now;
+    if (profileClicks.current.count === 5) {
+      profileClicks.current.count = 0;
+      go("profile");
+    }
+  }
   const stateRef = useRef(state);
   useEffect(() => {
     stateRef.current = state;
@@ -418,7 +428,7 @@ export default function RadarApp() {
   function switchMarket(next: Market) {
     setMarket(next);
     setHours("48");
-    setFit("30");
+    setFit("15");
     setSort("recent-fit");
     setCounty("Any");
     setCategory("Any");
@@ -470,7 +480,7 @@ export default function RadarApp() {
       (j) =>
         inMarket(j.organization, market) &&
         (view === "saved" || ageHours(j) <= Number(hours)) &&
-        j.score.total >= Math.max(30, Number(fit)) &&
+        j.score.total >= Math.max(15, Number(fit)) &&
         (county === "Any" || j.organization.county === county) &&
         (category === "Any" || j.category === category) &&
         (status === "Any" || j.status === status) &&
@@ -554,7 +564,7 @@ export default function RadarApp() {
             </button>
             <button
               className={`profile-nav ${view === "profile" ? "active" : ""}`}
-              onClick={() => go("profile")}
+              onClick={openProfile}
             >
               <span className="avatar">QS</span>
               <span>
@@ -610,10 +620,7 @@ export default function RadarApp() {
           <main id="main" tabIndex={-1}>
             <section className="market-switch" aria-label="Job search location">
               <div>
-                <strong>Where’s your next chapter?</strong>
-                <p>
-                  Fresh opportunities for Qiqi · 48 hours · 30+ possible fit
-                </p>
+                <strong>祝你好运，前程似锦! created by Yeric to Qiqi</strong>
               </div>
               <div
                 className="market-buttons"
@@ -638,6 +645,25 @@ export default function RadarApp() {
                 </Button>
               </div>
             </section>
+                    <section className="page-heading">
+                      <div>
+                        <div className="eyebrow">
+                          Job Search
+                        </div>
+                        <h1>Opportunity Radar</h1>
+                        <p>
+                          Live Entertainment <i>·</i> Events <i>·</i> Production{" "}
+                          <i>·</i> Media{" "}
+                          <span className="heading-location">
+                            <MapPin size={14} />
+                            {marketLabels[market]}
+                          </span>
+                        </p>
+                      </div>
+                      <span className="radar-stamp">
+                        <Radar size={44} />
+                      </span>
+                    </section>
             {DEMO && !LIVE && (
               <div className="demo-banner">
                 <span>
@@ -673,7 +699,7 @@ export default function RadarApp() {
                   {feedError && <strong> {feedError}</strong>}
                   <br />
                   Miami / South Florida, Charleston SC and eligible remote
-                  roles. Career-related jobs only · 30+ possible fit. Your notes
+                  roles. Career-related jobs only · 15+ possible fit. Your notes
                   stay in this browser.
                   {feed?.sources.some((s) => s.mode === "needs_key") && (
                     <>
@@ -687,32 +713,6 @@ export default function RadarApp() {
                 </span>
               </div>
             )}
-            {LIVE &&
-              view === "radar" &&
-              !!feed?.leads.filter((l) => l.market === market).length && (
-                <details
-                  className="panel"
-                  style={{ padding: "16px", marginBottom: "16px" }}
-                >
-                  <summary>
-                    Promising pages from web search · review needed
-                  </summary>
-                  <p>
-                    These pages mention relevant work. They are search leads,
-                    not confirmed vacancies; posting dates and employer
-                    requirements still need checking.
-                  </p>
-                  {feed.leads
-                    .filter((l) => l.market === market)
-                    .map((l) => (
-                      <p key={l.url}>
-                        <External href={l.url}>{l.title}</External>
-                        <br />
-                        {l.snippet}
-                      </p>
-                    ))}
-                </details>
-              )}
             {error && (
               <div className="message error" role="alert">
                 {error}
@@ -771,29 +771,7 @@ export default function RadarApp() {
               <>
                 {(view === "radar" || view === "saved") && (
                   <>
-                    <section className="page-heading">
-                      <div>
-                        <div className="eyebrow">
-                          A MORE PERSONAL JOB SEARCH
-                        </div>
-                        <h1>
-                          {view === "saved"
-                            ? "Worth a closer look."
-                            : "Good opportunities. Real possibility."}
-                        </h1>
-                        <p>
-                          Live Entertainment <i>·</i> Events <i>·</i> Production{" "}
-                          <i>·</i> Media{" "}
-                          <span className="heading-location">
-                            <MapPin size={14} />
-                            {marketLabels[market]}
-                          </span>
-                        </p>
-                      </div>
-                      <span className="radar-stamp">
-                        <Radar size={44} />
-                      </span>
-                    </section>
+
                     <div className="stat-grid">
                       <button
                         className="stat-card accent-stat"
@@ -823,7 +801,7 @@ export default function RadarApp() {
                         className="stat-card"
                         onClick={() => {
                           setHours("24");
-                          setFit("30");
+                          setFit("15");
                         }}
                       >
                         <span>
@@ -965,7 +943,7 @@ export default function RadarApp() {
                                 label: "Fit score",
                                 value: fit,
                                 set: setFit,
-                                options: ["30", "50", "60", "70", "80", "90"],
+                                options: ["15", "30", "50", "60", "70", "80", "90", "100"],
                               },
                               {
                                 label: "Posted within",
@@ -1063,7 +1041,7 @@ export default function RadarApp() {
                             <Button
                               variant="ghost"
                               onClick={() => {
-                                setFit("30");
+                                setFit("15");
                                 setSort("recent-fit");
                                 setHours("48");
                                 setCounty("Any");
@@ -1118,36 +1096,6 @@ export default function RadarApp() {
                         </div>
                       </section>
                       <aside className="insights">
-                        <section className="focus-card">
-                          <div className="aside-eyebrow">
-                            <Target size={17} />
-                            YOUR SEARCH FOCUS
-                          </div>
-                          <h3>
-                            Experience that
-                            <br />
-                            connects the dots.
-                          </h3>
-                          <div className="focus-tags">
-                            <span>Live production</span>
-                            <span>Event operations</span>
-                            <span>Media & content</span>
-                          </div>
-                          <div className="focus-line">
-                            <Check size={15} />
-                            Assistant & coordinator roles
-                          </div>
-                          <div className="focus-line">
-                            <Check size={15} />
-                            {market === "miami"
-                              ? "Miami-Dade & Broward first"
-                              : "Charleston, South Carolina"}
-                          </div>
-                          <Button variant="ghost" onClick={() => go("profile")}>
-                            Fine-tune your profile
-                            <ArrowRight size={16} />
-                          </Button>
-                        </section>
                         <section className="hidden-card">
                           <span className="aside-eyebrow">
                             <Radio size={17} />
@@ -1185,6 +1133,23 @@ export default function RadarApp() {
                     </div>
                   </>
                 )}
+                    {LIVE && view === "radar" && !!feed?.leads.some((l) => l.market === market) && (
+                      <section className="web-discovery">
+                        <h2>More opportunities across job boards</h2>
+                        <p className="muted">Recent web search results for {marketLabels[market]}. Open each source to confirm the vacancy, date and requirements. These results are not scored or verified jobs.</p>
+                        <div className="org-grid">
+                          {feed.leads.filter((l) => l.market === market && careerRelated({ title: l.title, description: l.snippet }, state.profile)).map((l) => (
+                            <article className="panel" style={{ padding: 22 }} key={l.url}>
+                              <span className="eyebrow">{new URL(l.url).hostname.replace(/^www\./, "")} · Review needed</span>
+                              <h3><External href={l.url}>{l.title}</External></h3>
+                              <p>{l.snippet}</p>
+                              <small className="muted">Found {new Date(l.foundAt).toLocaleDateString()} · Posting date unconfirmed</small>
+                              <p><External href={l.url}>View opportunity <ArrowUpRight size={15} /></External></p>
+                            </article>
+                          ))}
+                        </div>
+                      </section>
+                    )}
                 {(view === "hidden" || view === "organizations") && (
                   <>
                     <PageHeading
@@ -1210,28 +1175,13 @@ export default function RadarApp() {
                           onChange={(e) => setQuery(e.target.value)}
                         />
                       </label>
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          setOrgFilter(
-                            orgFilter === "Chinese/Asian-affiliated"
-                              ? "Any"
-                              : "Chinese/Asian-affiliated",
-                          )
-                        }
-                        aria-pressed={orgFilter === "Chinese/Asian-affiliated"}
-                      >
-                        Chinese / Asian affiliation
-                      </Button>
+
                       <Button onClick={() => setImporting("organization")}>
                         <Plus size={17} />
                         Add organization
                       </Button>
                     </div>
-                    <p className="muted">
-                      Affiliations appear only with explicit public evidence. No
-                      ethnicity is inferred from names.
-                    </p>
+
                     <div className="org-grid">
                       {state.organizations
                         .filter(
@@ -1244,8 +1194,6 @@ export default function RadarApp() {
                                   j.score.total >= 60 &&
                                   !["CLOSED", "EXPIRED"].includes(j.status),
                               )) &&
-                            (orgFilter !== "Chinese/Asian-affiliated" ||
-                              affiliation(o).length > 0) &&
                             `${o.name} ${o.type} ${o.city}`
                               .toLowerCase()
                               .includes(query.toLowerCase()),
@@ -1374,7 +1322,7 @@ export default function RadarApp() {
                         </h3>
                         <p>
                           {LIVE ? (
-                            "The radar combines employer feeds, Remotive, Jobicy, Himalayas and Google Jobs through SerpApi. General Google searches also find pages to review. Every job must relate to Qiqi’s career and reach 30/100. Search-engine dates are labeled estimates. Review employer requirements before applying."
+                            "The radar combines employer feeds, Remotive, Jobicy, Himalayas and Google Jobs through SerpApi. General Google searches also find pages to review. Every job must relate to Qiqi’s career and reach 15/100. Search-engine dates are labeled estimates. Review employer requirements before applying."
                           ) : (
                             <>
                               Import employer source records and record your
