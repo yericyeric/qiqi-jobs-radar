@@ -25,6 +25,22 @@ const makeFeed = () =>
     jobs: [],
   });
 describe("broad discovery and 15-point career gate", () => {
+  it("keeps a career-related long shot between 15 and 29 without admitting unrelated video roles", () => {
+    const job = makeSample(now).jobs[0];
+    job.title = "Senior Studio Assistant";
+    job.description = "Organize props and prepare the studio for the creative team.";
+    job.organization.type = "Creative team";
+    job.sources.forEach((source) => {
+      source.originalPostedAt = "2020-01-01T00:00:00.000Z";
+      source.estimatedPostedAt = null;
+    });
+    const score = scoreJob(job, sampleProfile, now);
+    expect(score.total).toBeGreaterThanOrEqual(15);
+    expect(score.total).toBeLessThan(30);
+    expect(score.rejection).toBeNull();
+    expect(score.requirementMatch).toBe("LONG_SHOT");
+    expect(careerRelated({ title: "Video Medical Interpreter", description }, sampleProfile)).toBe(false);
+  });
   it("allows a related partial fit below 70 but rejects generic transferable skills", () => {
     const job = makeSample(now).jobs[0];
     job.title = "Studio Assistant";
