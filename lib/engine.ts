@@ -79,6 +79,11 @@ export function verify(v: Verification | null, now = Date.now()): Status {
   if (now - Date.parse(v.checkedAt) > 24 * HOUR) return "UNKNOWN";
   if (!v.pageLoads || v.httpStatus === null || v.httpStatus >= 400)
     return "UNKNOWN";
+  // An API listing and link do not prove the external application form works.
+  if (v.method === "AUTOMATED_ATS")
+    return v.jobIdExists && v.listedByEmployer && v.applyExists
+      ? "LIKELY_ACTIVE"
+      : "UNKNOWN";
   if (
     v.sourceKind !== "OTHER" &&
     v.jobIdExists &&

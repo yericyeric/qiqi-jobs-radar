@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build --webpack",
     "build:pages": "cross-env RADAR_DEMO=true NEXT_PUBLIC_DEMO=true next build --webpack",
+    "build:live": "cross-env RADAR_DEMO=true NEXT_PUBLIC_DEMO=false NEXT_PUBLIC_LIVE=true next build --webpack",
+    "collect:jobs": "node scripts/run-collector.cjs",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",

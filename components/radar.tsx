@@ -61,7 +61,16 @@ import {
   normalize,
 } from "../lib/engine";
 const DEMO = process.env.NEXT_PUBLIC_DEMO === "true";
-const STORE = "qiqi-radar-demo-v1";
+const LIVE = process.env.NEXT_PUBLIC_LIVE === "true";
+const LOCAL = DEMO || LIVE;
+const STORE = LIVE ? "qiqi-radar-live-v1" : "qiqi-radar-demo-v1";
+import {
+  emptyLiveState,
+  feedSchema,
+  mergeLiveFeed,
+  migrateLegacyState,
+  type LiveFeed,
+} from "../lib/live";
 import {
   inMarket,
   compareRecentFit,
@@ -170,6 +179,9 @@ function External({
   );
 }
 export default function RadarApp() {
+  const [feed, setFeed] = useState<LiveFeed | null>(null);
+  const [feedError, setFeedError] = useState("");
+  const [currentTime, setCurrentTime] = useState(0);
   const [market, setMarket] = useState<Market>("miami");
   useEffect(() => {
     void Promise.resolve().then(() => {
@@ -235,9 +247,13 @@ export default function RadarApp() {
     let alive = true;
     async function load() {
       try {
-        if (DEMO) {
+        if (LOCAL) {
           const raw = localStorage.getItem(STORE);
-          let s = makeSample();
+          let s = LIVE ? emptyLiveState() : makeSample();
+          if (LIVE && !raw) {
+            const legacy = localStorage.getItem("qiqi-radar-demo-v1");
+            if (legacy) s = migrateLegacyState(JSON.parse(legacy));
+          }
           if (raw) {
             const parsed = JSON.parse(raw);
             profileSchema.parse(parsed.profile);
@@ -253,7 +269,7 @@ export default function RadarApp() {
               );
             s = parsed;
           }
-          if (s.profile.locationVersion !== 2) {
+          if (!LIVE && s.profile.locationVersion !== 2) {
             const additions = makeSample();
             for (const o of additions.organizations.filter(
               (o) => o.county === "Charleston",
@@ -276,18 +292,62 @@ export default function RadarApp() {
       } catch (e) {
         if (alive) {
           setError(e instanceof Error ? e.message : "Unable to load radar.");
-          if (!DEMO) setLogin(true);
+          if (!LOCAL) setLogin(true);
         }
       }
     }
     void load();
-    const clock = setInterval(
-      () => setState((s) => (s ? refresh(s) : s)),
-      60000,
-    );
+    const clock = setInterval(() => {
+      setCurrentTime(Date.now());
+      setState((s) => (s ? refresh(s) : s));
+    }, 60000);
     return () => {
       alive = false;
       clearInterval(clock);
+    };
+  }, []);
+  useEffect(() => {
+    if (!LIVE) return;
+    let alive = true;
+    let loading = false;
+    const controller = new AbortController();
+    async function update() {
+      if (loading || !stateRef.current) return;
+      loading = true;
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/data/jobs.json?t=${Math.floor(Date.now() / 60000)}`,
+          { cache: "no-store", signal: controller.signal },
+        );
+        if (!response.ok)
+          throw new Error(
+            "The job feed could not be reached. Showing the last downloaded data.",
+          );
+        const nextFeed = feedSchema.parse(await response.json());
+        if (!alive) return;
+        const next = mergeLiveFeed(stateRef.current!, nextFeed);
+        localStorage.setItem(STORE, JSON.stringify(next));
+        stateRef.current = next;
+        setState(next);
+        setFeed(nextFeed);
+        setCurrentTime(Date.now());
+        setFeedError("");
+      } catch (e) {
+        if (alive)
+          setFeedError(
+            e instanceof Error ? e.message : "Unable to refresh jobs.",
+          );
+      } finally {
+        loading = false;
+      }
+    }
+    const first = setTimeout(() => void update(), 250);
+    const timer = setInterval(() => void update(), 60000);
+    return () => {
+      alive = false;
+      controller.abort();
+      clearTimeout(first);
+      clearInterval(timer);
     };
   }, []);
   async function commit(
@@ -302,10 +362,11 @@ export default function RadarApp() {
     setError("");
     setNotice("");
     try {
-      const next = DEMO
+      const next = LOCAL
         ? local(structuredClone(stateRef.current))
         : await api(path, method, body);
-      if (DEMO) localStorage.setItem(STORE, JSON.stringify(next));
+      if (LOCAL) localStorage.setItem(STORE, JSON.stringify(next));
+      stateRef.current = next;
       setState(next);
       setNotice(message);
       return true;
@@ -524,7 +585,11 @@ export default function RadarApp() {
             <div>
               <span className="mode-pill">
                 <span className="pulse-dot" />
-                {DEMO ? "Demo workspace" : "Private workspace"}
+                {LIVE
+                  ? "Live job radar"
+                  : DEMO
+                    ? "Demo workspace"
+                    : "Private workspace"}
               </span>
               {state && (
                 <Button
@@ -567,11 +632,43 @@ export default function RadarApp() {
                 </Button>
               </div>
             </section>
-            {DEMO && (
+            {DEMO && !LIVE && (
               <div className="demo-banner">
                 <span>
                   <strong>Interactive demo</strong> · Fictional opportunities.
                   Changes stay in this browser. Automatic search is off.
+                </span>
+              </div>
+            )}
+            {LIVE && (
+              <div className="demo-banner" role="status">
+                <span>
+                  <strong>Real job listings</strong> · Scheduled every 15
+                  minutes; GitHub may delay runs.
+                  {feed ? (
+                    <>
+                      {" "}
+                      Last scan: {new Date(
+                        feed.attemptedAt,
+                      ).toLocaleString()} ·{" "}
+                      {feed.sources.filter((s) => s.ok).length}/
+                      {feed.sources.length} sources available.
+                      {currentTime - Date.parse(feed.attemptedAt) >
+                        45 * 60000 && (
+                        <strong>
+                          {" "}
+                          Updates are delayed. Check Sources &amp; activity.
+                        </strong>
+                      )}
+                    </>
+                  ) : (
+                    " Waiting for the first feed download."
+                  )}
+                  {feedError && <strong> {feedError}</strong>}
+                  <br />
+                  Miami / South Florida and Charleston, SC. Only configured
+                  employers are searched. Your saved jobs and notes stay in this
+                  browser.
                 </span>
               </div>
             )}
@@ -881,6 +978,7 @@ export default function RadarApp() {
                                   "Seasonal",
                                   "Contract",
                                   "Internship",
+                                  "Unknown",
                                 ],
                               },
                               {
@@ -1228,17 +1326,48 @@ export default function RadarApp() {
                     />
                     <div className="admin-overview">
                       <section className="panel">
-                        <h3>Phase 1 · Manual discovery</h3>
+                        <h3>
+                          {LIVE
+                            ? "Scheduled employer searches"
+                            : "Phase 1 · Manual discovery"}
+                        </h3>
                         <p>
-                          Import employer source records and record your
-                          verification evidence. Automatic discovery, scheduled
-                          checks and email alerts are not connected in this
-                          phase.
+                          {LIVE ? (
+                            "Greenhouse, Lever and SmartRecruiters public employer feeds. Publication dates come from the source; jobs with unknown dates are excluded from the recent filter. Match scores are a guide: review each employer’s requirements. Email alerts are not enabled."
+                          ) : (
+                            <>
+                              Import employer source records and record your
+                              verification evidence. Automatic discovery,
+                              scheduled checks and email alerts are not
+                              connected in this phase.
+                            </>
+                          )}
                         </p>
+                        {LIVE &&
+                          feed?.sources.map((source) => (
+                            <p key={source.id}>
+                              <External href={source.url}>
+                                {source.name}
+                              </External>{" "}
+                              ·{" "}
+                              {source.ok
+                                ? `${source.count} local roles found`
+                                : `Unavailable: ${source.error}`}
+                              <br />
+                              Last successful check:{" "}
+                              {source.lastSuccessfulAt
+                                ? new Date(
+                                    source.lastSuccessfulAt,
+                                  ).toLocaleString()
+                                : "Not yet"}
+                            </p>
+                          ))}
                         <div className="status-line">
                           <span className="badge">Manual import ready</span>
                           <span className="badge neutral">
-                            Automatic search off
+                            {LIVE
+                              ? "Schedule: every 15 min"
+                              : "Automatic search off"}
                           </span>
                           <span className="badge neutral">Email off</span>
                         </div>
@@ -1250,7 +1379,7 @@ export default function RadarApp() {
                       <section className="panel">
                         <h3>Your data</h3>
                         <p>
-                          {DEMO
+                          {LOCAL
                             ? "Stored only in this browser. Export a backup before clearing browser data."
                             : "Stored in your private PostgreSQL database. Download a portable JSON snapshot."}
                         </p>
@@ -1258,7 +1387,7 @@ export default function RadarApp() {
                           <Download size={17} />
                           Export workspace
                         </Button>
-                        {!DEMO && (
+                        {!LOCAL && (
                           <Button
                             variant="ghost"
                             onClick={async () => {
@@ -1732,7 +1861,7 @@ function JobDetails({
             <dt>Last checked</dt>
             <dd>
               {j.verification
-                ? `${new Date(j.verification.checkedAt).toLocaleString()} · Manual evidence`
+                ? `${new Date(j.verification.checkedAt).toLocaleString()} · ${j.verification.method === "AUTOMATED_ATS" ? "Employer ATS check" : "Manual evidence"}`
                 : "Not verified"}
             </dd>
           </div>

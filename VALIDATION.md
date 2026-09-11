@@ -1,19 +1,9 @@
-# Delivery validation
+# Live release validation — 2026-09-11
 
-Location update (2026-09-11): 34 tests pass, including Charleston import/scoring, region isolation, legacy profile upgrade, preserved application history, freshness-first ordering and manufacturing rejection. No PostgreSQL schema migration is needed: county columns are text and candidate preferences are JSON. Existing schema and repository integration tests remain passing.
+The live Pages implementation passes lint, TypeScript and 41 tests across seven files. The optimized static export passes with `/qiqi-jobs-radar` as base path and omits API routes. Tests cover source-failure retention, genuine closure vs changed filters, stable publication dates, Charleston geography, unknown dates, legacy profile migration, local action preservation and stale verification, alongside the existing scoring/auth/database cases.
 
-Validated locally on Windows with Node 24.19, Next.js 16.3.4, Prisma 6.19.3 and the included pnpm lockfile.
+The collector was executed against all seven configured public employer boards without credentials. Its first successful snapshot contained four relevant local postings, all in Miami; one source posting date was within 48 hours. These are source/title-filter results, not a claim that all four meet the default fit threshold or that Charleston has no jobs. Source timestamps and results change over time. The normalized JSON was validated using the same schema consumed by the app.
 
-- ESLint: passes with zero warnings (`--max-warnings=0`).
-- TypeScript: passes with `tsc --noEmit`.
-- Vitest: 29 tests pass across five files.
-- PostgreSQL: migration creates 17 tables in PGlite 0.5.8; valid affiliation accepted, unsupported affiliation and score outside 0–100 rejected.
-- Prisma integration: genuine PostgreSQL wire connection to isolated PGlite socket server. Imports, candidate children, application history, canonical source merging, score records and transaction rollback checked through Prisma.
-- API: unauthenticated access rejected; cross-origin writes rejected; owner login issues secure HttpOnly cookie; invalid imports rejected; logout clears cookie.
-- Full Next.js server build: passes, including dynamic API route.
-- GitHub Pages static-export build: passes; API route excluded.
-- Local static preview: HTTP 200, opened in Codex. No browser click/screenshot testing was requested or performed.
+Public APIs were read; no job applications, contacts or emails were sent. The GitHub repository is public, but the available browser is signed out. Changes have not been pushed and the new workflow has not been executed on GitHub. Activation instructions and exact workflow text are included. No browser click/screenshot QA is claimed.
 
-No hosted database account, live ATS connection, external email service, scheduled search or GitHub publication was configured. GitHub workflow and Docker files are supplied but have not been run on those external services. Tests use isolated fictional fixtures; they do not claim that real employers are hiring.
-
-The Windows runtime restricts child-process spawning. Validation uses supported in-process TypeScript loading, thread workers and webpack compilation; no type checks were disabled. The Prisma migration was created from the schema and executed through PostgreSQL/PGlite; the local Prisma CLI migration-diff subprocess could not run. CI also runs Prisma migrate deploy and seed against a PostgreSQL 16 service.
+Existing PostgreSQL integration tests execute the migration and transactions against PGlite using the PostgreSQL wire protocol. No live database or paid hosting account is required by the new Pages mode. Earlier database edition verification is described in ARCHITECTURE.md.

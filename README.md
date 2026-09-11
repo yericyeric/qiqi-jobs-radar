@@ -1,5 +1,9 @@
 # Qiqi Job Radar
 
+## Live GitHub Pages release — September 2026
+
+The Pages workflow now checks seven public employer boards through Greenhouse, Lever and SmartRecruiters every 15 minutes. It publishes real job facts while keeping private notes and actions in browser storage. GitHub may delay scheduled runs. Read **LIVE-DATA.md** for the current design and **LEEME.md** to activate it. No paid server or ATS key is required. The historical Phase 1 details below describe the database edition and optional fictional demo.
+
 ## Miami ↔ Charleston
 
 The location switch selects **Miami / South Florida** or **Charleston, South Carolina** for the radar, saved feed and organization directory. Each switch resets the feed to the past 48 hours, 70+ fit and freshness-first ranking: the past 24 hours first, then 24–48 hours, with better fit first within each group. Broader date/fit filters remain available for deliberate review. Matching remote roles may appear in either market. Applications remain together so location changes never hide application history.
@@ -12,13 +16,14 @@ A personal job-discovery workspace for Qiqi Su, focused on live entertainment, e
 
 Phase 1: responsive radar, score explanations, filters, candidate editing and rescoring, validated JSON job/organization imports, canonical duplicate merging, source and manual-verification details, save/dismiss/applied actions, immutable action history, application tracking, organization directory, outreach prospects and import diagnostics. The full app persists to PostgreSQL via Prisma and requires a private owner access key. Sample job records are fictional and cannot be mistaken for live search results in the UI.
 
-No automated job discovery, employer-page fetching, scheduled worker, AI service, email or SMS delivery is running. These are later phases. The source adapter and classification interfaces and deterministic alert predicate provide extension points; the only working source adapter in Phase 1 is manual import. No third-party service credentials are required for the demo.
+The live Pages edition adds scheduled ATS discovery. The database edition continues to use manual imports. General web discovery, AI services, email and SMS delivery are not implemented.
 
-## Two deployment modes
+## Deployment modes
 
 | Mode             | Where                                                           | Data                         | Capabilities                                                                         |
 | ---------------- | --------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------ |
 | Demo             | GitHub Pages / any static host                                  | This browser's local storage | Fictional examples and interactive local workflows; no server or alerts              |
+| Live Pages | GitHub Pages + GitHub Actions | Public job feed; private browser storage | Real listings and local tracker; no device synchronization |
 | Private full app | Node host (Vercel, Render, Railway or your server) + PostgreSQL | Private PostgreSQL           | Authenticated imports, profile, jobs, organizations, action history and applications |
 
 GitHub Pages cannot run the database or API. Keep credentials and private candidate/application information out of the repository. A purchased domain and external hosting/database services are separate from Pages.
@@ -51,20 +56,21 @@ pnpm dev
 
 Open the local address printed by Next.js and sign in with `RADAR_ACCESS_KEY`. The seed is idempotent: it preserves existing profile edits and inserts no fictional job records into the live database. If a secret or database is missing, the app fails closed with setup guidance.
 
-## Publish your demo on GitHub Pages
+## Publish live jobs on GitHub Pages
 
 1. Create a GitHub repository and upload this folder's contents, including `.github/`. Do not upload `node_modules`, `.next`, `.env`, exported backups or private application data.
 2. In repository Settings → Pages, select **GitHub Actions** as the source.
-3. In Actions, run **Publish fictional demo to GitHub Pages**. This is manually triggered to avoid publishing unexpectedly.
+3. In Actions, run **Publish Qiqi live jobs**, or push the updated code to main. The schedule activates when the workflow is on the default branch.
 4. Open the URL provided by the successful deployment. The workflow handles repository subpaths and user sites.
 
-To build the static demo yourself:
+To build the live static app yourself:
 
 ```sh
-pnpm build:pages
+pnpm collect:jobs
+pnpm build:live
 ```
 
-Upload the resulting `out/` directory to a static host. For a repository subpath set `NEXT_PUBLIC_BASE_PATH=/your-repository` at build time. `RADAR_DEMO=true` excludes every API route; `NEXT_PUBLIC_DEMO=true` enables browser-local persistence. Do not set either flag for the private app.
+Upload `out/` to a static host. Set `NEXT_PUBLIC_BASE_PATH=/your-repository` before building for a repository subpath. The live script sets `RADAR_DEMO=true` to exclude API routes and `NEXT_PUBLIC_LIVE=true` for real feeds with local storage. `pnpm build:pages` still builds an optional fictional demo. Do not set static-mode flags for the database edition.
 
 ## Deploy the private app
 

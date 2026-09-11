@@ -1,3 +1,7 @@
+# Current release
+
+The live GitHub Pages collector, 15-minute schedule, public feed, provenance rules and browser persistence are documented in [LIVE-DATA.md](LIVE-DATA.md). The remainder records the earlier Phase 1 database architecture.
+
 # Qiqi Job Radar — Phase 1
 
 ## Scope and deployment

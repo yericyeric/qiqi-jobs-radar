@@ -66,7 +66,7 @@ export const verificationSchema = z.object({
   httpStatus: z.number().int().min(100).max(599).nullable().default(null),
   closed: z.boolean().default(false),
   expired: z.boolean().default(false),
-  method: z.literal("MANUAL").default("MANUAL"),
+  method: z.enum(["MANUAL", "AUTOMATED_ATS"]).default("MANUAL"),
   notes: z.string().max(2000).default(""),
 });
 export const affiliationSchema = z.object({
@@ -143,6 +143,7 @@ export const jobInputSchema = z
       "Seasonal",
       "Contract",
       "Internship",
+      "Unknown",
     ]),
     description: z.string().min(30).max(50000),
     applyUrl: optionalUrl,

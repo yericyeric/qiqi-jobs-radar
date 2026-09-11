@@ -1,0 +1,51 @@
+[
+  {
+    "kind": "greenhouse",
+    "slug": "feverup",
+    "name": "Fever",
+    "website": "https://feverup.com",
+    "type": "Live entertainment and events"
+  },
+  {
+    "kind": "greenhouse",
+    "slug": "comfrt",
+    "name": "Comfrt",
+    "website": "https://comfrt.com",
+    "type": "Apparel brand"
+  },
+  {
+    "kind": "greenhouse",
+    "slug": "camp",
+    "name": "CAMP",
+    "website": "https://camp.com",
+    "type": "Family entertainment"
+  },
+  {
+    "kind": "greenhouse",
+    "slug": "guardz",
+    "name": "Guardz",
+    "website": "https://guardz.com",
+    "type": "Cybersecurity"
+  },
+  {
+    "kind": "lever",
+    "slug": "feldinc",
+    "name": "Feld Entertainment",
+    "website": "https://www.feldentertainment.com",
+    "type": "Live entertainment"
+  },
+  {
+    "kind": "smartrecruiters",
+    "slug": "NBCUniversal3",
+    "name": "NBCUniversal",
+    "website": "https://www.nbcuniversal.com",
+    "type": "Broadcast and media production"
+  },
+  {
+    "kind": "smartrecruiters",
+    "slug": "AubergeCollection",
+    "name": "Auberge Collection",
+    "website": "https://auberge.com",
+    "type": "Hospitality"
+  }
+]
