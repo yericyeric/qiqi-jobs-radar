@@ -11,6 +11,12 @@ function feed() {
 const opinion = {summary:"Production support experience can transfer to these event duties.",strengths:["Experience supporting live shows and stage operations."],questions:["Confirm the required availability and level of responsibility."],nextStep:"Review the employer requirements before applying."};
 const response = () => new Response(JSON.stringify({status:"completed",steps:[{type:"model_output",content:[{type:"text",text:JSON.stringify(opinion)}]}]}), {status:200});
 describe("optional anonymous AI second opinion", () => {
+  it("accepts the provider output-block format without exposing thought blocks", async () => {
+    const request = vi.fn(async () => new Response(JSON.stringify({status:"completed",outputs:[{type:"thought",text:"not public"},{type:"text",text:JSON.stringify(opinion)}]}),{status:200}));
+    const result = await reviewFeed(feed(),null,now,"test-secret",request);
+    expect(result.aiReviews).toHaveLength(1);
+    expect(JSON.stringify(result)).not.toContain("not public");
+  });
   it("sends only curated anonymous experience and sanitized vacancy fields", () => {
     const r = feed().jobs[0];
     r.input.description += " Contact private@example.com https://example.com Qiqi Su +1 305 555 1234";
