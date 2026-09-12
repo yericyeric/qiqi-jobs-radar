@@ -706,6 +706,7 @@ export default function RadarApp() {
                   Miami / South Florida, Charleston SC and eligible remote
                   roles. Career-related jobs only · 15+ possible fit. Your notes
                   stay in this browser.
+                  {feed?.aiState && <><br />AI second opinions: {feed.aiReviews.length} available. {feed.aiState.status === "ready" ? "New reviews are added gradually; original scores stay unchanged." : "New AI reviews are paused; original matching continues."}</>}
                   {feed?.sources.some((s) => s.mode === "needs_key") && (
                     <>
                       <br />
@@ -1816,6 +1817,19 @@ function JobDetails({
           Learned preferences can adjust the total by up to 3 points. Profile
           facts stay separate.
         </p>
+      </section>
+      <section>
+        <h3>AI second opinion</h3>
+        <p className="muted">Based on an anonymous skills and experience summary. Your browser profile edits are not sent. This opinion does not change the score or confirm eligibility.</p>
+        {j.aiReview ? <>
+          <p>{j.aiReview.summary}</p>
+          <h4>Transferable strengths</h4>
+          <ul>{j.aiReview.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
+          <h4>What to confirm</h4>
+          <ul>{j.aiReview.questions.map((s, i) => <li key={i}>{s}</li>)}</ul>
+          <p><strong>Suggested next step:</strong> {j.aiReview.nextStep}</p>
+          <small>{j.aiReview.model} · {new Date(j.aiReview.reviewedAt).toLocaleString()} · AI can make mistakes.</small>
+        </> : <p>No AI review available yet. Your original match assessment remains available.</p>}
       </section>
       <section>
         <h3>Responsibilities</h3>
