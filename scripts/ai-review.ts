@@ -28,8 +28,8 @@ const instruction = `You provide a cautious second opinion on one job using ONLY
 export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now = Date.now(), key = process.env.GEMINI_API_KEY, request: typeof fetch = fetch): Promise<LiveFeed> {
   const day = new Date(now).toISOString().slice(0, 10);
   const prior = previous?.aiState;
-  const state = { revision: "v6", day, used: prior?.day === day ? prior.used : 0,
-    retryAfter: prior?.revision === "v6" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
+  const state = { revision: "v7", day, used: prior?.day === day ? prior.used : 0,
+    retryAfter: prior?.revision === "v7" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
   const reviews: AiReview[] = [];
   const eligible = feed.jobs.filter(r => {
     const score = scoreJob(r.input, sampleProfile, now);
@@ -50,11 +50,14 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
     state.status = "quota"; state.message = "AI paused until the next allowance; original matching continues."; return result();
   }
   state.retryAfter = null;
-  for (const r of pending.slice(0, Math.min(2, DAILY_LIMIT - state.used))) {
+  let calls = 0;
+  for (const r of pending.slice(0, 2)) {
+    if (calls >= 2 || state.used >= DAILY_LIMIT) break;
+    calls++;
     state.used++;
     let phase = "request";
     try {
-      const response = await request(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent`, {
+      const options: RequestInit = {
         method: "POST", redirect: "error", signal: AbortSignal.timeout(45000),
         headers: { "Content-Type": "application/json", "x-goog-api-key": key.trim() },
         body: JSON.stringify({ systemInstruction: {parts:[{text:instruction}]},
@@ -63,7 +66,14 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
             responseSchema: {type:"OBJECT",properties:{summary:{type:"STRING"},strengths:{type:"ARRAY",items:{type:"STRING"}},questions:{type:"ARRAY",items:{type:"STRING"}},nextStep:{type:"STRING"}},required:["summary","strengths","questions","nextStep"]},
           },
         }),
-      });
+      };
+      let usedModel = AI_MODEL;
+      let response = await request(`https://generativelanguage.googleapis.com/v1beta/models/${usedModel}:generateContent`, options);
+      if ([404, 500, 502, 503].includes(response.status) && calls < 2 && state.used < DAILY_LIMIT) {
+        usedModel = "gemini-flash-lite-latest";
+        calls++; state.used++;
+        response = await request(`https://generativelanguage.googleapis.com/v1beta/models/${usedModel}:generateContent`, {...options, signal:AbortSignal.timeout(45000)});
+      }
       if (!response.ok) {
         state.status = response.status === 429 ? "quota" : "error";
         state.message = `AI provider returned HTTP ${response.status}; original matching continues.`;
@@ -88,7 +98,7 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
       phase = "opinion validation";
       const opinion = aiOpinionSchema.parse(JSON.parse(text));
       if (/https?:|[\w.+-]+@[\w.-]+|\bqiqi\b|\byeric\b/i.test(JSON.stringify(opinion))) throw new Error("Unsafe response");
-      reviews.push({ ...opinion, jobId: r.id, fingerprint: reviewFingerprint(r), model: AI_MODEL, reviewedAt: new Date(now).toISOString() });
+      reviews.push({ ...opinion, jobId: r.id, fingerprint: reviewFingerprint(r), model: usedModel, reviewedAt: new Date(now).toISOString() });
     } catch {
       // Never print provider error bodies, prompts, key or private information.
       state.status = "error"; state.message = `AI ${phase} failed; original matching continues.`;
