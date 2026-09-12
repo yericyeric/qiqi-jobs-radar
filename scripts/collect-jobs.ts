@@ -10,6 +10,7 @@ import configs from "./sources.json";
 import { careerRelated } from "../lib/career";
 import { scoreJob } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
+import { reviewFeed } from "./ai-review";
 import { directJobPortal } from "../lib/markets";
 import { broadSearch, deduplicateFeed } from "./broad-search";
 
@@ -443,6 +444,7 @@ export async function collect(
     ]),
   });
   await mkdir("public/data", { recursive: true });
-  await writeFile(output, JSON.stringify(feed));
-  return feed;
+  const reviewed = feedSchema.parse(await reviewFeed(feed, previous, now));
+  await writeFile(output, JSON.stringify(reviewed));
+  return reviewed;
 }
