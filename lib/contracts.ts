@@ -194,6 +194,7 @@ export type Score = {
   requirementMatch: "MATCH" | "STRETCH" | "LONG_SHOT" | "NOT_ELIGIBLE";
 };
 export type Job = JobInput & {
+  aiReview?: import("./ai-review").AiReview;
   id: string;
   discoveredAt: string;
   lastSeenAt: string;
