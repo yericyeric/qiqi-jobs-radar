@@ -10,7 +10,7 @@ The location switch selects **Miami / South Florida** or **Charleston, South Car
 
 Charleston imports use `organization.county: "Charleston"` and a location such as `Charleston, SC`. Existing profiles gain Charleston once without changing resume facts or deleting records. The profile screen can disable it afterward. Existing demo workspaces receive two clearly fictional Charleston examples without rewriting old posting dates. No automated search is enabled by this location update.
 
-A personal job-discovery workspace for Qiqi Su, focused on live entertainment, events, production and media in Miami-Dade and Broward.
+A personal job-discovery workspace, focused on live entertainment, events, production and media in Miami-Dade and Broward.
 
 ## What is implemented
 
