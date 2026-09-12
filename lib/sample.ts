@@ -6,7 +6,37 @@ import {
   type JobInput,
 } from "./contracts";
 import { scoreJob, verify } from "./engine";
+const addedSkills = [
+  "Meeting facilitation", "Performance attribution", "Planning, budgeting and forecasting",
+  "Microsoft Office", "Television", "Radio", "Program budgeting", "Media planning",
+  "Art direction", "Content planning", "Entertainment management", "Dance",
+  "Stage management", "Pre-production planning", "Concert production", "Chinese Mandarin",
+  "Broadcasting", "Editing",
+];
+const addedExperience = [
+  "Supported end-to-end concert production, coordinating pre-show planning, logistics, and on-site operations.",
+  "Facilitated production meetings and streamlined communication between creative, technical, and administrative teams.",
+  "Collaborated with the conductor, marketing, and finance departments to align artistic direction, promotional strategies, and budget priorities.",
+  "Assisted the Stage Manager and Director during rehearsals and live shows, managing cues, transitions, and overall stage flow to ensure a smooth performance.",
+  "Stagehand", "Stage Manager", "Teaching Assistant",
+  "Produced and edited official promotional videos for the TV series over its broadcast duration, including special features and general trailers. These videos garnered 3.5 billion views across the platform.",
+  "Planned the promotional direction of the video during the production, filming, and broadcast phases.",
+  "Controlled the overall official video content and executed overall editing.",
+];
+const profileNotes = "Employers, dates, certifications, language proficiency levels and years of experience have not been provided.";
+export function updateQiqiSkills(profile: Profile): Profile {
+  if (profile.skillsVersion === 1) return profile;
+  const append = (current: string[], extra: string[]) => {
+    const seen = new Set(current.map((s) => s.trim().toLowerCase()));
+    return [...current, ...extra.filter((s) => !seen.has(s.toLowerCase()))];
+  };
+  return { ...profile, skillsVersion: 1,
+    skills: append(profile.skills, addedSkills), experience: append(profile.experience, addedExperience),
+    notes: profile.notes === "Employers, dates, software, certifications, languages and years of experience have not been provided." ? profileNotes : profile.notes,
+  };
+}
 export const sampleProfile: Profile = {
+  skillsVersion: 1,
   name: "Qiqi Su",
   headline: "Live entertainment, events & media production",
   education: [
@@ -27,17 +57,19 @@ export const sampleProfile: Profile = {
     "Coordination across teams",
     "Event logistics",
     "Backstage experience",
+    ...addedSkills.filter((s) => s !== "Stage management"),
   ],
   experience: [
     "Stage management and live-event production support",
     "Production assistance, event operations and logistics",
     "Media/content production and video editing",
+    ...addedExperience,
   ],
   counties: ["Miami-Dade", "Broward", "Charleston"],
   locationVersion: 2,
   remote: true,
   notes:
-    "Employers, dates, software, certifications, languages and years of experience have not been provided.",
+    profileNotes,
 };
 export function makeSample(now = Date.now()): RadarState {
   const ago = (h: number) => new Date(now - h * 3600000).toISOString();
