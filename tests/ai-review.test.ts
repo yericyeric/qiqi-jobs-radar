@@ -9,10 +9,10 @@ function feed() {
   return feedSchema.parse({version:1, attemptedAt:new Date(now).toISOString(),lastSuccessfulAt:null,sources:[],jobs:[{id:"ats:test:1",board:"test",discoveredAt:new Date(now).toISOString(),input}]});
 }
 const opinion = {summary:"Production support experience can transfer to these event duties.",strengths:["Experience supporting live shows and stage operations."],questions:["Confirm the required availability and level of responsibility."],nextStep:"Review the employer requirements before applying."};
-const response = () => new Response(JSON.stringify({status:"completed",steps:[{type:"model_output",content:[{type:"text",text:JSON.stringify(opinion)}]}]}), {status:200});
+const response = () => new Response(JSON.stringify({candidates:[{finishReason:"STOP",content:{parts:[{text:JSON.stringify(opinion)}]}}]}), {status:200});
 describe("optional anonymous AI second opinion", () => {
   it("accepts the provider output-block format without exposing thought blocks", async () => {
-    const request = vi.fn(async () => new Response(JSON.stringify({status:"completed",outputs:[{type:"thought",text:"not public"},{type:"text",text:JSON.stringify(opinion)}]}),{status:200}));
+    const request = vi.fn(async () => new Response(JSON.stringify({candidates:[{finishReason:"STOP",content:{parts:[{thought:true,text:"not public"},{text:JSON.stringify(opinion)}]}}]}),{status:200}));
     const result = await reviewFeed(feed(),null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(result.aiReviews).toHaveLength(1);
     expect(JSON.stringify(result)).not.toContain("not public");
