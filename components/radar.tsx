@@ -48,7 +48,7 @@ import {
   categories,
   stages,
 } from "../lib/contracts";
-import { makeSample } from "../lib/sample";
+import { makeSample, updateQiqiSkills } from "../lib/sample";
 import { act, refresh, importJobs } from "../lib/state";
 import { careerRelated } from "../lib/career";
 import {
@@ -297,6 +297,7 @@ export default function RadarApp() {
               if (!s.jobs.some((existing) => existing.id === job.id))
                 s.jobs.push(job);
           }
+          s.profile = updateQiqiSkills(s.profile);
           s = refresh(s);
           localStorage.setItem(STORE, JSON.stringify(s));
           if (alive) setState(s);
