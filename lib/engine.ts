@@ -94,6 +94,7 @@ export function verify(v: Verification | null, now = Date.now()): Status {
   return v.applyExists ? "LIKELY_ACTIVE" : "UNKNOWN";
 }
 import { careerRelated } from "./career";
+import { skillMatches } from "./fit-skills";
 const signals = [
   {
     pattern:
@@ -184,13 +185,14 @@ export function scoreJob(
     ...profile.education,
   ].join(" ");
   const overlap = meaningful.filter((x) => x.skills.test(profileText));
+  const specific = skillMatches(desc, profile);
   const components: Record<string, number> = {
     "Career relevance": meaningful.length
       ? Math.min(35, 15 + meaningful.length * 7)
       : careerRelated(j, profile)
         ? 10
         : 0,
-    "Responsibility overlap": Math.min(25, overlap.length * 7),
+    "Responsibility overlap": Math.min(25, overlap.length * 4 + specific.length * 3),
     "Career level": senior
       ? 0
       : /assistant|coordinator|associate|junior|stagehand|technician|specialist/i.test(
@@ -243,7 +245,9 @@ export function scoreJob(
       Object.values(components).reduce((a, b) => a + b, 0) + learned,
     ),
   );
-  if (!meaningful.length) total = Math.min(total, 45);
+  if (!meaningful.length) total = Math.min(total, specific.length ? 60 : 45);
+  // A seniority gap cannot produce a reassuring Strong/Exceptional label.
+  if (senior) total = Math.min(total, 69);
   if (rejection) total = Math.min(total, 15);
   if (!rejection && total < 15) rejection = "LOW_FIT";
   return {
@@ -259,7 +263,7 @@ export function scoreJob(
               ? "Possible fit"
               : "Low fit",
     components,
-    reasons: overlap.map((x) => x.label),
+    reasons: [...specific, ...overlap.map((x) => x.label)],
     rejection,
     requirementMatch: assessment,
   };
