@@ -12,6 +12,7 @@ export const aiReviewSchema = aiOpinionSchema.extend({
 });
 export type AiReview = z.infer<typeof aiReviewSchema>;
 export const aiStateSchema = z.object({
+  revision: z.string().optional(),
   day: z.string(), used: z.number().int().nonnegative(),
   retryAfter: z.iso.datetime({ offset: true }).nullable(),
   status: z.enum(["ready", "needs_key", "quota", "error"]),
