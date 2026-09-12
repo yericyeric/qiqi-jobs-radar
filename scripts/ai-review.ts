@@ -1,11 +1,10 @@
 import { createHash } from "node:crypto";
-import { z } from "zod";
 import { anonymousCareer, aiOpinionSchema, type AiReview } from "../lib/ai-review";
 import type { LiveFeed } from "../lib/live";
 import { scoreJob, ageHours, verify } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
 
-export const AI_MODEL = "gemini-3.8-flash";
+export const AI_MODEL = "gemini-2.5-flash";
 export const DAILY_LIMIT = 20;
 const HOUR = 3600000;
 // Only public vacancy text is sent; remove contact details and links as well.
@@ -29,8 +28,8 @@ const instruction = `You provide a cautious second opinion on one job using ONLY
 export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now = Date.now(), key = process.env.GEMINI_API_KEY, request: typeof fetch = fetch): Promise<LiveFeed> {
   const day = new Date(now).toISOString().slice(0, 10);
   const prior = previous?.aiState;
-  const state = { revision: "v3", day, used: prior?.day === day ? prior.used : 0,
-    retryAfter: prior?.revision === "v3" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
+  const state = { revision: "v4", day, used: prior?.day === day ? prior.used : 0,
+    retryAfter: prior?.revision === "v4" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
   const reviews: AiReview[] = [];
   const eligible = feed.jobs.filter(r => {
     const score = scoreJob(r.input, sampleProfile, now);
@@ -55,13 +54,14 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
     state.used++;
     let phase = "request";
     try {
-      const response = await request("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      const response = await request(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent`, {
         method: "POST", redirect: "error", signal: AbortSignal.timeout(45000),
         headers: { "Content-Type": "application/json", "x-goog-api-key": key.trim() },
-        body: JSON.stringify({ model: AI_MODEL, store: false, system_instruction: instruction,
-          input: JSON.stringify(aiPayload(r)),
-          generation_config: { max_output_tokens: 1600 },
-          response_format: { type: "text", mime_type: "application/json", schema: z.toJSONSchema(aiOpinionSchema) },
+        body: JSON.stringify({ systemInstruction: {parts:[{text:instruction}]},
+          contents: [{role:"user",parts:[{text:JSON.stringify(aiPayload(r))}]}],
+          generationConfig: { maxOutputTokens: 3000, thinkingConfig: {thinkingBudget:512}, responseMimeType:"application/json",
+            responseSchema: {type:"OBJECT",properties:{summary:{type:"STRING"},strengths:{type:"ARRAY",items:{type:"STRING"}},questions:{type:"ARRAY",items:{type:"STRING"}},nextStep:{type:"STRING"}},required:["summary","strengths","questions","nextStep"]},
+          },
         }),
       });
       if (!response.ok) {
@@ -72,14 +72,9 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
       }
       phase = "response parsing";
       const data = await response.json();
-      // API revisions expose final text as model_output steps or output blocks.
-      const steps = Array.isArray(data.steps) ? data.steps : [];
-      const blocks = Array.isArray(data.outputs) ? data.outputs : [];
-      console.log("AI response structure", JSON.stringify({ status: data.status, keys: Object.keys(data), stepTypes: steps.map((s: {type?:string}) => s.type), outputTypes: blocks.map((s: {type?:string}) => s.type) }));
-      if (data.status !== "completed") throw new Error("Invalid response");
-      const text = [...steps.filter((s: {type?: string}) => s.type === "model_output")
-        .flatMap((s: {content?: {type?: string; text?: string}[]}) => s.content || [])
-        , ...blocks].filter((s: {type?: string}) => s.type === "text")
+      const candidate = data.candidates?.[0];
+      if (candidate?.finishReason !== "STOP" || !Array.isArray(candidate.content?.parts)) throw new Error("Invalid response");
+      const text = candidate.content.parts.filter((s: {thought?: boolean; text?: string}) => !s.thought && typeof s.text === "string")
         .map((s: {text?: string}) => s.text || "").join("");
       phase = "opinion validation";
       const opinion = aiOpinionSchema.parse(JSON.parse(text));
