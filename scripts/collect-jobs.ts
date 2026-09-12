@@ -11,6 +11,7 @@ import { careerRelated } from "../lib/career";
 import { scoreJob } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
 import { reviewFeed } from "./ai-review";
+import { planSearch } from "./search-planner";
 import { directJobPortal } from "../lib/markets";
 import { broadSearch, deduplicateFeed } from "./broad-search";
 
@@ -407,6 +408,9 @@ export async function collect(
       console.error(`${b.name}: ${error}`);
     }
   }
+  const directed = await planSearch(previous?.searchPlan || null,
+    previous?.aiState?.day === time.slice(0,10) ? previous.aiState.used : 0,
+    now, process.env.SERPAPI_API_KEY ? process.env.GEMINI_API_KEY : undefined);
   const broad = await broadSearch(previous, now, {
     plain,
     countyFor,
@@ -421,7 +425,7 @@ export async function collect(
       if (html.length > 3000000) throw new Error("Page too large");
       return html;
     },
-  });
+  }, process.env, directed);
   const feed = feedSchema.parse({
     version: 1,
     attemptedAt: time,
@@ -431,6 +435,7 @@ export async function collect(
         : previous?.lastSuccessfulAt || null,
     sources: [...sources, ...broad.sources],
     searchState: broad.searchState,
+    searchPlan: directed.plan,
     leads: broad.leads,
     jobs: deduplicateFeed([
       ...reconcile(

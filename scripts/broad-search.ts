@@ -9,6 +9,7 @@ import type { LiveFeed } from "../lib/live";
 import { careerRelated } from "../lib/career";
 import { scoreJob, canonicalUrl, duplicate } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
+import type { SearchPlan } from "../lib/ai-review";
 import { searchRoles } from "../lib/fit-skills";
 import { directJobPortal, localVacancyText } from "../lib/markets";
 
@@ -257,6 +258,7 @@ export async function broadSearch(
   now: number,
   helpers: Helpers,
   env: Record<string, string | undefined> = process.env,
+  directed?: {plan: SearchPlan; due: boolean},
 ) {
   const jobs: FeedRecord[] = [],
     sources: Status[] = [];
@@ -272,6 +274,7 @@ export async function broadSearch(
     note: string,
     search: () => Promise<{ records: FeedRecord[]; examined: number }>,
     keyRequired = false,
+    force = false,
   ) {
     const priorStatus = previous?.sources.find((s) => s.id === id);
     const priorJobs = previous?.jobs.filter((j) => j.board === id) || [];
@@ -298,7 +301,7 @@ export async function broadSearch(
     }
     const legacySearchError = keyRequired && priorStatus?.mode === "error" &&
       priorStatus.error === "Source unavailable or response invalid. Previous records retained; credentials are never logged.";
-    if (!legacySearchError && priorStatus?.nextCheckAt && Date.parse(priorStatus.nextCheckAt) > now) {
+    if (!force && !legacySearchError && priorStatus?.nextCheckAt && Date.parse(priorStatus.nextCheckAt) > now) {
       sources.push({
         ...priorStatus,
         mode: priorStatus.ok ? "cached" : priorStatus.mode,
@@ -515,6 +518,13 @@ export async function broadSearch(
     { id: "charleston", name: "Charleston, South Carolina" },
   ] as const;
   for (const city of cities) {
+    if (directed && (!directed.due || city.id !== directed.plan.city)) {
+      const id = `google-jobs-v2:${city.id}`;
+      const prior = previous?.sources.find(s => s.id === id);
+      if (prior) sources.push(prior);
+      jobs.push(...(previous?.jobs.filter(j => j.board === id) || []));
+      continue;
+    }
     const source = {
       id: `google-jobs-v2:${city.id}`,
       name: `Google Jobs · ${city.name} (SerpApi)`,
@@ -529,7 +539,7 @@ export async function broadSearch(
       12,
       "Broad job search across employers and job boards. One rotating query every twelve hours per city; 210 shared requests per 31 days maximum.",
       async () => {
-        const q = `${terms[Math.floor(state.queryIndex / 2) % terms.length]} jobs in ${city.name}`;
+        const q = `${directed?.plan.query || terms[Math.floor(state.queryIndex / 2) % terms.length]} jobs in ${city.name}`;
         state.queryIndex++;
         const params = new URLSearchParams({
           engine: "google_jobs",
@@ -577,6 +587,7 @@ export async function broadSearch(
         return { records, examined: rows.length };
       },
       true,
+      !!directed?.due,
     );
   }
   for (const city of cities) {

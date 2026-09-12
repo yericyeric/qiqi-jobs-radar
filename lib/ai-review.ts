@@ -1,4 +1,10 @@
 import { z } from "zod";
+export const planSchema = z.object({
+  attemptedAt: z.iso.datetime({offset:true}), city: z.enum(["miami", "charleston"]),
+  query: z.string().max(100), history: z.array(z.string().max(100)).max(20),
+  day: z.string(), used: z.number().int().nonnegative(),
+});
+export type SearchPlan = z.infer<typeof planSchema>;
 
 export const aiOpinionSchema = z.object({
   summary: z.string().min(10).max(700),

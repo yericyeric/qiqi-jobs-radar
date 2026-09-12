@@ -25,6 +25,7 @@ const addedExperience = [
 ];
 const profileNotes = "Employers, dates, certifications, language proficiency levels and years of experience have not been provided.";
 export function updateQiqiSkills(profile: Profile): Profile {
+  if (profile.namePrivacyVersion !== 1) profile = { ...profile, name: "", namePrivacyVersion: 1 };
   if (profile.skillsVersion === 2) return profile;
   const append = (current: string[], extra: string[]) => {
     const seen = new Set(current.map((s) => s.trim().toLowerCase()));
@@ -38,7 +39,8 @@ export function updateQiqiSkills(profile: Profile): Profile {
 }
 export const sampleProfile: Profile = {
   skillsVersion: 2,
-  name: "Qiqi Su",
+  name: "",
+  namePrivacyVersion: 1,
   headline: "Live entertainment, events & media production",
   education: [
     "Master of Arts in Live Entertainment Management",

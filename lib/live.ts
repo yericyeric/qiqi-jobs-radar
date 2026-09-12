@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { aiReviewSchema, aiStateSchema } from "./ai-review";
+import { aiReviewSchema, aiStateSchema, planSchema } from "./ai-review";
 import {
   jobInputSchema,
   profileSchema,
@@ -45,6 +45,7 @@ export const feedSchema = z.object({
   jobs: z.array(feedRecordSchema),
   aiReviews: z.array(aiReviewSchema).default([]),
   aiState: aiStateSchema.nullable().default(null),
+  searchPlan: planSchema.nullable().default(null),
   searchState: z
     .object({
       windowStartedAt: z.iso.datetime({ offset: true }),

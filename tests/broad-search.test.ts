@@ -27,6 +27,19 @@ const makeFeed = () =>
     jobs: [],
   });
 describe("broad discovery and 15-point career gate", () => {
+  it("executes the selected query for just one city and waits between directed searches", async () => {
+    const urls:string[]=[];
+    const get=async(url:string)=>{urls.push(url);return url.includes("engine=google_jobs")?{jobs_results:[]}:url.includes("engine=google_light")?{organic_results:[]}:{jobs:[]};};
+    const plan={attemptedAt:new Date(now).toISOString(),city:"miami" as const,query:"video editor",history:["video editor"],day:"2026-09-11",used:1};
+    const helpers={plain,countyFor,dateValue,categoryFor:()=>"Production" as const,get};
+    await broadSearch(null,now,helpers,{SERPAPI_API_KEY:"fixture-key"},{plan,due:true});
+    const directed=urls.filter(u=>u.includes("engine=google_jobs"));
+    expect(directed).toHaveLength(1);
+    expect(new URL(directed[0]).searchParams.get("q")).toBe("video editor jobs in Miami, Florida");
+    urls.length=0;
+    await broadSearch(null,now,helpers,{SERPAPI_API_KEY:"fixture-key"},{plan,due:false});
+    expect(urls.some(u=>u.includes("engine=google_jobs"))).toBe(false);
+  });
   it("rejects search pages and accepts individual vacancy URLs", () => {
     expect(directJobPortal("https://www.indeed.com/q-events-l-miami-jobs.html")).toBeNull();
     expect(directJobPortal("https://www.glassdoor.com/Job/miami-jobs.htm")).toBeNull();

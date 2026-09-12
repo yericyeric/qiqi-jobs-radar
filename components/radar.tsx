@@ -571,9 +571,9 @@ export default function RadarApp() {
               className={`profile-nav ${view === "profile" ? "active" : ""}`}
               onClick={openProfile}
             >
-              <span className="avatar">QS</span>
+              <span className="avatar"><Radar size={24} aria-hidden="true" /></span>
               <span>
-                <strong>{state?.profile.name || "Qiqi Su"}</strong>
+                <strong>My profile</strong>
                 <small>Candidate profile</small>
               </span>
               <ChevronRight size={17} />
@@ -706,7 +706,6 @@ export default function RadarApp() {
                   Miami / South Florida, Charleston SC and eligible remote
                   roles. Career-related jobs only · 15+ possible fit. Your notes
                   stay in this browser.
-                  {feed?.aiState && <><br />AI second opinions: {feed.aiReviews.length} available. {feed.aiState.status === "ready" ? "New reviews are added gradually; original scores stay unchanged." : "New AI reviews are paused; original matching continues."}</>}
                   {feed?.sources.some((s) => s.mode === "needs_key") && (
                     <>
                       <br />
@@ -1266,7 +1265,7 @@ export default function RadarApp() {
                   <>
                     <PageHeading
                       eyebrow="THE PERSON BEHIND THE RADAR"
-                      title="Built around you, Qiqi."
+                      title="Your profile."
                       description="Keep your experience accurate. Your profile shapes every match."
                     />
                     <ProfileForm
@@ -1819,19 +1818,6 @@ function JobDetails({
         </p>
       </section>
       <section>
-        <h3>AI second opinion</h3>
-        <p className="muted">Based on an anonymous skills and experience summary. Your browser profile edits are not sent. This opinion does not change the score or confirm eligibility.</p>
-        {j.aiReview ? <>
-          <p>{j.aiReview.summary}</p>
-          <h4>Transferable strengths</h4>
-          <ul>{j.aiReview.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
-          <h4>What to confirm</h4>
-          <ul>{j.aiReview.questions.map((s, i) => <li key={i}>{s}</li>)}</ul>
-          <p><strong>Suggested next step:</strong> {j.aiReview.nextStep}</p>
-          <small>{j.aiReview.model} · {new Date(j.aiReview.reviewedAt).toLocaleString()} · AI can make mistakes.</small>
-        </> : <p>No AI review available yet. Your original match assessment remains available.</p>}
-      </section>
-      <section>
         <h3>Responsibilities</h3>
         <p className="preserve-lines">{j.description}</p>
       </section>
@@ -2067,7 +2053,7 @@ function ProfileForm({
     >
       <section className="panel">
         <div className="profile-form-head">
-          <span className="avatar large">QS</span>
+          <span className="avatar large"><Radar size={32} aria-hidden="true" /></span>
           <div>
             <h2>Candidate profile</h2>
             <p>Only include experience you can support.</p>
@@ -2078,7 +2064,6 @@ function ProfileForm({
             Full name
             <input
               value={p.name}
-              required
               onChange={(e) => setP({ ...p, name: e.target.value })}
             />
           </label>
