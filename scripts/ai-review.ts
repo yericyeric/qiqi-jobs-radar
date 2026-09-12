@@ -29,8 +29,8 @@ const instruction = `You provide a cautious second opinion on one job using ONLY
 export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now = Date.now(), key = process.env.GEMINI_API_KEY, request: typeof fetch = fetch): Promise<LiveFeed> {
   const day = new Date(now).toISOString().slice(0, 10);
   const prior = previous?.aiState;
-  const state = { day, used: prior?.day === day ? prior.used : 0,
-    retryAfter: prior?.retryAfter || null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
+  const state = { revision: "v2", day, used: prior?.day === day ? prior.used : 0,
+    retryAfter: prior?.revision === "v2" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
   const reviews: AiReview[] = [];
   const eligible = feed.jobs.filter(r => {
     const score = scoreJob(r.input, sampleProfile, now);
@@ -67,10 +67,14 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
         break;
       }
       const data = await response.json();
-      if (data.status !== "completed" || !Array.isArray(data.steps)) throw new Error("Invalid response");
-      const text = data.steps.filter((s: {type?: string}) => s.type === "model_output")
+      // API revisions expose final text as model_output steps or output blocks.
+      const steps = Array.isArray(data.steps) ? data.steps : [];
+      const blocks = Array.isArray(data.outputs) ? data.outputs : [];
+      console.log("AI response structure", JSON.stringify({ status: data.status, keys: Object.keys(data), stepTypes: steps.map((s: {type?:string}) => s.type), outputTypes: blocks.map((s: {type?:string}) => s.type) }));
+      if (data.status !== "completed") throw new Error("Invalid response");
+      const text = [...steps.filter((s: {type?: string}) => s.type === "model_output")
         .flatMap((s: {content?: {type?: string; text?: string}[]}) => s.content || [])
-        .filter((s: {type?: string}) => s.type === "text")
+        , ...blocks].filter((s: {type?: string}) => s.type === "text")
         .map((s: {text?: string}) => s.text || "").join("");
       const opinion = aiOpinionSchema.parse(JSON.parse(text));
       if (/https?:|[\w.+-]+@[\w.-]+|\bqiqi\b|\byeric\b/i.test(JSON.stringify(opinion))) throw new Error("Unsafe response");
