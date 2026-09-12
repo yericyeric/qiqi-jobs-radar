@@ -4,7 +4,7 @@ import type { LiveFeed } from "../lib/live";
 import { scoreJob, ageHours, verify } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
 
-export const AI_MODEL = "gemini-2.5-flash";
+export const AI_MODEL = "gemini-flash-latest";
 export const DAILY_LIMIT = 20;
 const HOUR = 3600000;
 // Only public vacancy text is sent; remove contact details and links as well.
@@ -28,8 +28,8 @@ const instruction = `You provide a cautious second opinion on one job using ONLY
 export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now = Date.now(), key = process.env.GEMINI_API_KEY, request: typeof fetch = fetch): Promise<LiveFeed> {
   const day = new Date(now).toISOString().slice(0, 10);
   const prior = previous?.aiState;
-  const state = { revision: "v5", day, used: prior?.day === day ? prior.used : 0,
-    retryAfter: prior?.revision === "v5" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
+  const state = { revision: "v6", day, used: prior?.day === day ? prior.used : 0,
+    retryAfter: prior?.revision === "v6" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
   const reviews: AiReview[] = [];
   const eligible = feed.jobs.filter(r => {
     const score = scoreJob(r.input, sampleProfile, now);
@@ -59,7 +59,7 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
         headers: { "Content-Type": "application/json", "x-goog-api-key": key.trim() },
         body: JSON.stringify({ systemInstruction: {parts:[{text:instruction}]},
           contents: [{role:"user",parts:[{text:JSON.stringify(aiPayload(r))}]}],
-          generationConfig: { maxOutputTokens: 3000, thinkingConfig: {thinkingBudget:512}, responseMimeType:"application/json",
+          generationConfig: { maxOutputTokens: 4096, responseMimeType:"application/json",
             responseSchema: {type:"OBJECT",properties:{summary:{type:"STRING"},strengths:{type:"ARRAY",items:{type:"STRING"}},questions:{type:"ARRAY",items:{type:"STRING"}},nextStep:{type:"STRING"}},required:["summary","strengths","questions","nextStep"]},
           },
         }),
