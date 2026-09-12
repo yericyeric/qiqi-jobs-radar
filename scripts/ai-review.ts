@@ -28,8 +28,8 @@ const instruction = `You provide a cautious second opinion on one job using ONLY
 export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now = Date.now(), key = process.env.GEMINI_API_KEY, request: typeof fetch = fetch): Promise<LiveFeed> {
   const day = new Date(now).toISOString().slice(0, 10);
   const prior = previous?.aiState;
-  const state = { revision: "v4", day, used: prior?.day === day ? prior.used : 0,
-    retryAfter: prior?.revision === "v4" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
+  const state = { revision: "v5", day, used: prior?.day === day ? prior.used : 0,
+    retryAfter: prior?.revision === "v5" ? prior.retryAfter : null, status: "ready" as "ready" | "needs_key" | "quota" | "error", message: "AI second opinions do not alter scores or filters." };
   const reviews: AiReview[] = [];
   const eligible = feed.jobs.filter(r => {
     const score = scoreJob(r.input, sampleProfile, now);
@@ -67,6 +67,15 @@ export async function reviewFeed(feed: LiveFeed, previous: LiveFeed | null, now 
       if (!response.ok) {
         state.status = response.status === 429 ? "quota" : "error";
         state.message = `AI provider returned HTTP ${response.status}; original matching continues.`;
+        if (response.status === 404) {
+          const listing = await request("https://generativelanguage.googleapis.com/v1beta/models", {headers:{"x-goog-api-key":key.trim()},redirect:"error",signal:AbortSignal.timeout(15000)});
+          if (listing.ok) {
+            const body = await listing.json();
+            const names = (Array.isArray(body.models) ? body.models : []).map((m: {name?:string}) => m.name || "").filter((n:string) => /flash/i.test(n));
+            console.log("Available Flash model IDs", JSON.stringify(names));
+            state.message = `Model unavailable. Available: ${names.join(", ")}`.slice(0,200);
+          }
+        }
         state.retryAfter = new Date(now + (response.status === 429 ? 24 : 6) * HOUR).toISOString();
         break;
       }
