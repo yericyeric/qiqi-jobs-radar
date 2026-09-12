@@ -174,6 +174,7 @@ export const profileSchema = z.object({
     .array(z.enum(["Miami-Dade", "Broward", "Palm Beach", "Charleston"]))
     .min(1),
   locationVersion: z.literal(2).optional(),
+  skillsVersion: z.literal(1).optional(),
   remote: z.boolean(),
   notes: z.string().max(5000),
 });
