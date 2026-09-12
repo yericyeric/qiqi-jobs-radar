@@ -13,7 +13,7 @@ const response = () => new Response(JSON.stringify({status:"completed",steps:[{t
 describe("optional anonymous AI second opinion", () => {
   it("accepts the provider output-block format without exposing thought blocks", async () => {
     const request = vi.fn(async () => new Response(JSON.stringify({status:"completed",outputs:[{type:"thought",text:"not public"},{type:"text",text:JSON.stringify(opinion)}]}),{status:200}));
-    const result = await reviewFeed(feed(),null,now,"test-secret",request);
+    const result = await reviewFeed(feed(),null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(result.aiReviews).toHaveLength(1);
     expect(JSON.stringify(result)).not.toContain("not public");
   });
@@ -32,38 +32,38 @@ describe("optional anonymous AI second opinion", () => {
   });
   it("caches unchanged reviews, rechecks changed duties and never changes scores", async () => {
     const input = feed(), request = vi.fn(async () => response());
-    const reviewed = await reviewFeed(input,null,now,"test-secret",request);
+    const reviewed = await reviewFeed(input,null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(reviewed.aiReviews).toHaveLength(1);
     expect(reviewed.jobs).toEqual(input.jobs);
     const before = mergeLiveFeed(emptyLiveState(),input,now);
     const after = mergeLiveFeed(emptyLiveState(),reviewed,now);
     expect(after.jobs[0].score).toEqual(before.jobs[0].score);
     expect(after.jobs[0].aiReview?.summary).toBe(opinion.summary);
-    await reviewFeed(input,reviewed,now,"test-secret",request);
+    await reviewFeed(input,reviewed,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(request).toHaveBeenCalledTimes(1);
     input.jobs[0].input.description += " New stage duties.";
-    await reviewFeed(input,reviewed,now,"test-secret",request);
+    await reviewFeed(input,reviewed,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(request).toHaveBeenCalledTimes(2);
   });
   it("backs off on quota and preserves original matching", async () => {
     const input = feed(), request = vi.fn(async () => new Response("private error body",{status:429}));
-    const result = await reviewFeed(input,null,now,"test-secret",request);
+    const result = await reviewFeed(input,null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(result.jobs).toEqual(input.jobs); expect(result.aiState?.status).toBe("quota");
     expect(JSON.stringify(result)).not.toContain("private error body");
-    await reviewFeed(input,result,now+3600000,"test-secret",request);
+    await reviewFeed(input,result,now+3600000,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(request).toHaveBeenCalledTimes(1);
   });
   it("enforces daily limit and ignores instructions or malformed output", async () => {
     const input = feed(); input.aiState = {day:new Date(now).toISOString().slice(0,10),used:20,retryAfter:null,status:"ready",message:""};
     const request = vi.fn(async () => new Response(JSON.stringify({status:"completed",steps:[{type:"model_output",content:[{type:"text",text:'{"score":100,"applyUrl":"https://bad.example"}'}]}]}),{status:200}));
-    await reviewFeed(input,input,now,"test-secret",request); expect(request).not.toHaveBeenCalled();
-    const result = await reviewFeed(input,null,now,"test-secret",request);
+    await reviewFeed(input,input,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request); expect(request).not.toHaveBeenCalled();
+    const result = await reviewFeed(input,null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(result.aiReviews).toHaveLength(0); expect(result.jobs).toEqual(input.jobs);
     expect(result.aiState?.status).toBe("error");
   });
   it("does not send excluded or closed jobs", async () => {
     const input = feed(); input.jobs[0].input.title = "Warehouse worker";
     const request = vi.fn();
-    await reviewFeed(input,null,now,"test-secret",request); expect(request).not.toHaveBeenCalled();
+    await reviewFeed(input,null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request); expect(request).not.toHaveBeenCalled();
   });
 });
