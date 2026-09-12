@@ -5,6 +5,7 @@ export default function Home() {
     <>
       <Head>
         <title>Qiqi Job Radar</title>
+        <link rel="apple-touch-icon" sizes="180x180" href={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/apple-touch-icon.png`} />
         <meta
           name="description"
           content="A personal job radar for live entertainment, events, production and media in Miami/South Florida and Charleston, South Carolina."
