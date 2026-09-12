@@ -11,6 +11,13 @@ function feed() {
 const opinion = {summary:"Production support experience can transfer to these event duties.",strengths:["Experience supporting live shows and stage operations."],questions:["Confirm the required availability and level of responsibility."],nextStep:"Review the employer requirements before applying."};
 const response = () => new Response(JSON.stringify({candidates:[{finishReason:"STOP",content:{parts:[{text:JSON.stringify(opinion)}]}}]}), {status:200});
 describe("optional anonymous AI second opinion", () => {
+  it("uses at most one Lite fallback and counts it toward the daily allowance", async () => {
+    const request = vi.fn().mockResolvedValueOnce(new Response("",{status:503})).mockResolvedValueOnce(response());
+    const result = await reviewFeed(feed(),null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(result.aiState?.used).toBe(2);
+    expect(result.aiReviews[0].model).toBe("gemini-flash-lite-latest");
+  });
   it("accepts the provider output-block format without exposing thought blocks", async () => {
     const request = vi.fn(async () => new Response(JSON.stringify({candidates:[{finishReason:"STOP",content:{parts:[{thought:true,text:"not public"},{text:JSON.stringify(opinion)}]}}]}),{status:200}));
     const result = await reviewFeed(feed(),null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
