@@ -33,6 +33,10 @@ export function careerRelated(
       title,
     );
   if (direct) return true;
+  // Adjacent roles need creative duties, not merely an arts employer's name.
+  const adjacent = /art director|creative|media plan|content plan|teaching assistant|classroom assistant/i.test(title);
+  const creativeDuties = /(?:plan|support|assist|teach|edit|produc|coordinat|develop)\w*[^.!?]{0,100}(?:dance|performing arts|theat(?:re|er)|broadcast|television|radio|video|creative campaign|media campaign|editorial content)/i.test(description);
+  if (adjacent && creativeDuties) return true;
   const duties =
     /(?:plan|coordinat|organiz|produc|edit|film|shoot|support|execut|manag|assist)\w*[^.!?]{0,100}(?:live events?|event (?:operations|logistics|production)|video(?:s| production| content)?|broadcast|backstage|stage production|run.of.show|concert|festival|media production|content production)/i.test(
       description,
