@@ -55,7 +55,7 @@ describe("optional anonymous AI second opinion", () => {
   });
   it("enforces daily limit and ignores instructions or malformed output", async () => {
     const input = feed(); input.aiState = {day:new Date(now).toISOString().slice(0,10),used:20,retryAfter:null,status:"ready",message:""};
-    const request = vi.fn(async () => new Response(JSON.stringify({status:"completed",steps:[{type:"model_output",content:[{type:"text",text:'{"score":100,"applyUrl":"https://bad.example"}'}]}]}),{status:200}));
+    const request = vi.fn(async () => new Response(JSON.stringify({candidates:[{finishReason:"STOP",content:{parts:[{text:'{"score":100,"applyUrl":"https://bad.example"}'}]}}]}),{status:200}));
     await reviewFeed(input,input,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request); expect(request).not.toHaveBeenCalled();
     const result = await reviewFeed(input,null,now,"AIzaTEST_FAKE_KEY_FOR_UNIT_TESTS_ONLY",request);
     expect(result.aiReviews).toHaveLength(0); expect(result.jobs).toEqual(input.jobs);
