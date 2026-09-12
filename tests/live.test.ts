@@ -11,9 +11,20 @@ import {
   mergeLiveFeed,
   migrateLegacyState,
 } from "../lib/live";
-import { makeSample } from "../lib/sample";
+import { makeSample, updateQiqiSkills } from "../lib/sample";
 import { ageHours, verify } from "../lib/engine";
 const now = Date.parse("2026-09-11T12:00:00Z");
+it("adds Qiqi's skills once while preserving personal edits and avoiding duplicates", () => {
+  const original = { ...makeSample(now).profile, skillsVersion: undefined, skills: ["Stage management", "Custom skill"], experience: ["Personal experience"], notes: "Personal notes" };
+  const updated = updateQiqiSkills(original);
+  expect(updated.skills).toContain("Chinese Mandarin");
+  expect(updated.skills.filter((s) => s === "Stage management")).toHaveLength(1);
+  expect(updated.skills).toContain("Custom skill");
+  expect(updated.experience).toContain("Teaching Assistant");
+  expect(updated.experience).toContain("Personal experience");
+  expect(updated.notes).toBe("Personal notes");
+  expect(updateQiqiSkills(updated)).toBe(updated);
+});
 function record() {
   const input = structuredClone(makeSample(now).jobs[0]);
   input.isDemo = false;
