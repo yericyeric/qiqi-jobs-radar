@@ -1,4 +1,5 @@
 import Head from "next/head";
+import Script from "next/script";
 import RadarApp from "../components/radar";
 export default function Home() {
   return (
@@ -14,6 +15,13 @@ export default function Home() {
         <meta name="robots" content="noindex,nofollow" />
       </Head>
       <RadarApp />
+      {process.env.NEXT_PUBLIC_LIVE === "true" && (
+        <Script
+          src="https://gc.zgo.at/count.js"
+          data-goatcounter="https://cirey.goatcounter.com/count"
+          strategy="afterInteractive"
+        />
+      )}
     </>
   );
 }
