@@ -165,7 +165,8 @@ export const jobInputSchema = z
       });
   });
 export const profileSchema = z.object({
-  name: z.string().min(2).max(120),
+  name: z.string().max(120),
+  namePrivacyVersion: z.literal(1).optional(),
   headline: z.string().max(300),
   skills: z.array(z.string().min(1).max(120)).max(100),
   education: z.array(z.string().min(1).max(300)).max(20),
