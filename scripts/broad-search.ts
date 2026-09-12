@@ -9,6 +9,7 @@ import type { LiveFeed } from "../lib/live";
 import { careerRelated } from "../lib/career";
 import { scoreJob, canonicalUrl, duplicate } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
+import { searchRoles } from "../lib/fit-skills";
 import { directJobPortal, localVacancyText } from "../lib/markets";
 
 type Raw = Record<string, unknown>;
@@ -508,14 +509,7 @@ export async function broadSearch(
       return { records, examined };
     },
   );
-  const terms = [
-    "event coordinator",
-    "production assistant",
-    "video editor",
-    "stagehand",
-    "production coordinator",
-    "content producer",
-  ];
+  const terms = searchRoles(sampleProfile);
   const cities = [
     { id: "miami", name: "Miami, Florida" },
     { id: "charleston", name: "Charleston, South Carolina" },
@@ -594,7 +588,10 @@ export async function broadSearch(
     "Daily indexed search of Indeed, LinkedIn, Glassdoor, ZipRecruiter, Monster, SimplyHired, EntertainmentCareers, ProductionHUB, Staff Me Up and TeamWork Online. Results require review; this is not direct access to those platforms.",
     async () => {
       const portals = "(site:indeed.com/viewjob OR site:linkedin.com/jobs/view OR site:glassdoor.com/job-listing OR site:ziprecruiter.com/c OR site:monster.com/job-openings OR site:simplyhired.com/job OR site:entertainmentcareers.net OR site:productionhub.com/job OR site:staffmeup.com/jobs OR site:teamworkonline.com)";
-      const query = `("event coordinator" OR "production assistant" OR "video editor" OR stagehand OR "content producer") "${city.name.split(",")[0]}" ${portals} -remote -"work from home"`;
+      // Cover every role family over successive days without spending extra calls.
+      const start = Math.floor(now / (24 * HOUR)) * 5;
+      const roleQuery = Array.from({ length: Math.min(5, terms.length) }, (_, i) => `"${terms[(start + i) % terms.length]}"`).join(" OR ");
+      const query = `(${roleQuery}) "${city.name.split(",")[0]}" ${portals} -remote -"work from home"`;
       const params = new URLSearchParams({
         engine: "google_light",
         q: query,
