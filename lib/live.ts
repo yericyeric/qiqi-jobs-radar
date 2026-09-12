@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { aiReviewSchema, aiStateSchema } from "./ai-review";
 import {
   jobInputSchema,
   profileSchema,
@@ -42,6 +43,8 @@ export const feedSchema = z.object({
     }),
   ),
   jobs: z.array(feedRecordSchema),
+  aiReviews: z.array(aiReviewSchema).default([]),
+  aiState: aiStateSchema.nullable().default(null),
   searchState: z
     .object({
       windowStartedAt: z.iso.datetime({ offset: true }),
@@ -120,6 +123,7 @@ export function mergeLiveFeed(
       isRepost: false,
       status: verify(input.verification, now),
       score: scoreJob(input, state.profile, now),
+      aiReview: feed.aiReviews.find(a => a.jobId === r.id),
     };
   });
   // A disappeared record is retained for the user's tracker, without claiming it is live.
