@@ -11,7 +11,7 @@ const addedSkills = [
   "Microsoft Office", "Television", "Radio", "Program budgeting", "Media planning",
   "Art direction", "Content planning", "Entertainment management", "Dance",
   "Stage management", "Pre-production planning", "Concert production", "Chinese Mandarin",
-  "Broadcasting", "Editing",
+  "Broadcasting", "Editing", "English",
 ];
 const addedExperience = [
   "Supported end-to-end concert production, coordinating pre-show planning, logistics, and on-site operations.",
@@ -25,18 +25,19 @@ const addedExperience = [
 ];
 const profileNotes = "Employers, dates, certifications, language proficiency levels and years of experience have not been provided.";
 export function updateQiqiSkills(profile: Profile): Profile {
-  if (profile.skillsVersion === 1) return profile;
+  if (profile.skillsVersion === 2) return profile;
   const append = (current: string[], extra: string[]) => {
     const seen = new Set(current.map((s) => s.trim().toLowerCase()));
     return [...current, ...extra.filter((s) => !seen.has(s.toLowerCase()))];
   };
-  return { ...profile, skillsVersion: 1,
+  if (profile.skillsVersion === 1) return { ...profile, skillsVersion: 2, skills: append(profile.skills, ["English"]) };
+  return { ...profile, skillsVersion: 2,
     skills: append(profile.skills, addedSkills), experience: append(profile.experience, addedExperience),
     notes: profile.notes === "Employers, dates, software, certifications, languages and years of experience have not been provided." ? profileNotes : profile.notes,
   };
 }
 export const sampleProfile: Profile = {
-  skillsVersion: 1,
+  skillsVersion: 2,
   name: "Qiqi Su",
   headline: "Live entertainment, events & media production",
   education: [
