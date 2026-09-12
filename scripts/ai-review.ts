@@ -5,7 +5,8 @@ import { scoreJob, ageHours, verify } from "../lib/engine";
 import { sampleProfile } from "../lib/sample";
 
 export const AI_MODEL = "gemini-flash-latest";
-export const DAILY_LIMIT = 20;
+// Reserve four of the existing twenty calls for search planning.
+export const DAILY_LIMIT = 16;
 const HOUR = 3600000;
 // Only public vacancy text is sent; remove contact details and links as well.
 export function cleanJobText(text: string) {
